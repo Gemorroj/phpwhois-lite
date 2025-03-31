@@ -30,7 +30,7 @@ final class WhoisTest extends TestCase
     {
         $whois = new Whois($this->createLoggedClient());
         $data = $whois->lookup('127.0.0.1');
-        \file_put_contents('/test.txt', $data->raw);
+        // \file_put_contents('/test.txt', $data->raw);
         // var_dump($data->raw);
     }
 
@@ -38,7 +38,7 @@ final class WhoisTest extends TestCase
     {
         $whois = new Whois($this->createLoggedClient());
         $data = $whois->lookup('1.1.1.1');
-        \file_put_contents('/test.txt', $data->raw);
+        // \file_put_contents('/test.txt', $data->raw);
         // var_dump($data->raw);
     }
 
@@ -46,7 +46,7 @@ final class WhoisTest extends TestCase
     {
         $whois = new Whois($this->createLoggedClient());
         $data = $whois->lookup('2001:4860:4860::8888');
-        \file_put_contents('/test.txt', $data->raw);
+        // \file_put_contents('/test.txt', $data->raw);
         // var_dump($data->raw);
     }
 
@@ -54,7 +54,7 @@ final class WhoisTest extends TestCase
     {
         $whois = new Whois($this->createLoggedClient());
         $data = $whois->lookup('193.0.11.51');
-        \file_put_contents('/test.txt', $data->raw);
+        // \file_put_contents('/test.txt', $data->raw);
         // var_dump($data->raw);
     }
 
@@ -63,7 +63,7 @@ final class WhoisTest extends TestCase
     {
         $whois = new Whois($this->createLoggedClient());
         $data = $whois->lookup('200.3.13.10');
-        \file_put_contents('/test.txt', $data->raw);
+        // \file_put_contents('/test.txt', $data->raw);
         // var_dump($data->raw);
     }
 
@@ -71,7 +71,7 @@ final class WhoisTest extends TestCase
     {
         $whois = new Whois($this->createLoggedClient());
         $data = $whois->lookup('196.216.2.1');
-        \file_put_contents('/test.txt', $data->raw);
+        // \file_put_contents('/test.txt', $data->raw);
         // var_dump($data->raw);
     }
 
@@ -79,7 +79,7 @@ final class WhoisTest extends TestCase
     {
         $whois = new Whois($this->createLoggedClient());
         $data = $whois->lookup('AS4837');
-        \file_put_contents('/test.txt', $data->raw);
+        // \file_put_contents('/test.txt', $data->raw);
         // var_dump($data->raw);
     }
 
@@ -87,7 +87,7 @@ final class WhoisTest extends TestCase
     {
         $whois = new Whois($this->createLoggedClient());
         $data = $whois->lookup('220');
-        \file_put_contents('/test.txt', $data->raw);
+        // \file_put_contents('/test.txt', $data->raw);
         // var_dump($data->raw);
     }
 
@@ -95,7 +95,7 @@ final class WhoisTest extends TestCase
     {
         $whois = new Whois($this->createLoggedClient());
         $data = $whois->lookup('AS3333');
-        \file_put_contents('/test.txt', $data->raw);
+        // \file_put_contents('/test.txt', $data->raw);
         // var_dump($data->raw);
     }
 
@@ -104,7 +104,7 @@ final class WhoisTest extends TestCase
     {
         $whois = new Whois($this->createLoggedClient());
         $data = $whois->lookup('AS28001');
-        \file_put_contents('/test.txt', $data->raw);
+        // \file_put_contents('/test.txt', $data->raw);
         // var_dump($data->raw);
     }
 
@@ -112,7 +112,7 @@ final class WhoisTest extends TestCase
     {
         $whois = new Whois($this->createLoggedClient());
         $data = $whois->lookup('AS33764');
-        \file_put_contents('/test.txt', $data->raw);
+        // \file_put_contents('/test.txt', $data->raw);
         // var_dump($data->raw);
     }
 }

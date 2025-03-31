@@ -2,15 +2,18 @@
 
 declare(strict_types=1);
 
-namespace PHPWhoisLite;
+namespace PHPWhoisLite\Handler;
 
 use PHPWhoisLite\Client\WhoisClient;
+use PHPWhoisLite\Data;
+use PHPWhoisLite\HandlerInterface;
+use PHPWhoisLite\WhoisServerDetector;
 
 final readonly class AsHandler implements HandlerInterface
 {
     use WhoisServerDetector;
 
-    public function __construct(private string $defaultWhoisServer = 'whois.arin.net', private WhoisClient $whoisClient = new WhoisClient())
+    public function __construct(private WhoisClient $whoisClient, private string $defaultWhoisServer = 'whois.arin.net:43')
     {
     }
 
@@ -39,19 +42,19 @@ final readonly class AsHandler implements HandlerInterface
         $hasAsPrefix = false !== \stripos($query, 'AS');
 
         switch ($server) {
-            case 'whois.ripe.net':
+            case 'whois.ripe.net:43':
                 return $query;
                 break;
-            case 'whois.apnic.net':
+            case 'whois.apnic.net:43':
                 return $query;
                 break;
-            case 'whois.lacnic.net':
+            case 'whois.lacnic.net:43':
                 return $query; // fixme: server is down?
                 break;
-            case 'whois.afrinic.net':
+            case 'whois.afrinic.net:43':
                 return $query;
                 break;
-            case 'whois.arin.net':
+            case 'whois.arin.net:43':
                 if ($hasAsPrefix) {
                     return 'a '.\substr($query, 2);
                 }

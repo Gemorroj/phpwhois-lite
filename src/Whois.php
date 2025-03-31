@@ -7,6 +7,8 @@ namespace PHPWhoisLite;
 use Algo26\IdnaConvert\Exception\AlreadyPunycodeException;
 use Algo26\IdnaConvert\ToIdn;
 use PHPWhoisLite\Client\WhoisClient;
+use PHPWhoisLite\Handler\AsHandler;
+use PHPWhoisLite\Handler\IpHandler;
 
 final readonly class Whois
 {
@@ -23,12 +25,12 @@ final readonly class Whois
 
         switch ($queryType) {
             case QueryType::IP:
-                $handler = new IpHandler(whoisClient: $this->whoisClient);
+                $handler = new IpHandler($this->whoisClient);
 
                 return $handler->parse($query);
                 break;
             case QueryType::AS:
-                $handler = new AsHandler(whoisClient: $this->whoisClient);
+                $handler = new AsHandler($this->whoisClient);
 
                 return $handler->parse($query);
                 break;
