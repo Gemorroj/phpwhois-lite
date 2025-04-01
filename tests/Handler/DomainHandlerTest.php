@@ -47,4 +47,17 @@ final class DomainHandlerTest extends BaseTestCase
         self::assertEquals('http://whois.registry.net.za/whois/whois.sh?Domain=', $data->server);
         self::assertEquals(QueryTypeEnum::DOMAIN, $data->type);
     }
+
+    // punycode
+    public function testPrzidentRf(): void
+    {
+        $whoisServerList = new WhoisServerList();
+        $handler = new DomainHandler($this->createLoggedClient(), $whoisServerList);
+        $data = $handler->process('президент.рф');
+        // \file_put_contents('/test.txt', $data->raw);
+        // \var_dump($data);
+        self::assertStringContainsString('org:           Special Communications and Information Service of the Federal Guard Service of the Russian Federation (Spetssvyaz FSO RF)', $data->raw);
+        self::assertEquals('whois.ripn.net:43', $data->server);
+        self::assertEquals(QueryTypeEnum::DOMAIN, $data->type);
+    }
 }
