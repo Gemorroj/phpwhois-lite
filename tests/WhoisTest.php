@@ -4,6 +4,7 @@ namespace PHPWhoisLite\Tests;
 
 use PHPUnit\Framework\TestCase;
 use PHPWhoisLite\Client\WhoisClient;
+use PHPWhoisLite\Exception\IpReservedRangeException;
 use PHPWhoisLite\Whois;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Console\Input\ArgvInput;
@@ -29,6 +30,7 @@ final class WhoisTest extends TestCase
     public function testIp127001(): void
     {
         $whois = new Whois($this->createLoggedClient());
+        $this->expectException(IpReservedRangeException::class);
         $data = $whois->lookup('127.0.0.1');
         // \file_put_contents('/test.txt', $data->raw);
         // var_dump($data->raw);
