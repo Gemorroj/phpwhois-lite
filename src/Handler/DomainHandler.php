@@ -24,8 +24,6 @@ final readonly class DomainHandler implements HandlerInterface
 
     public function process(string $query): Data
     {
-        // todo: gtld servers - https://stackoverflow.com/questions/18270575/the-list-of-all-com-and-net-whois-servers
-
         try {
             $query = (new ToIdn())->convert($query);
         } catch (AlreadyPunycodeException) {

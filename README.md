@@ -4,6 +4,12 @@
 [![Latest Stable Version](https://poser.pugx.org/gemorroj/phpwhois-lite/v/stable)](https://packagist.org/packages/gemorroj/phpwhois-lite)
 [![Continuous Integration](https://github.com/Gemorroj/phpwhois-lite/workflows/Continuous%20Integration/badge.svg)](https://github.com/Gemorroj/phpwhois-lite/actions?query=workflow%3A%22Continuous+Integration%22)
 
+### TODO:
+- GTLD servers - https://stackoverflow.com/questions/18270575/the-list-of-all-com-and-net-whois-servers
+- convert NON UTF-8 responses
+- research whois.lacnic.net server (see https://github.com/Gemorroj/phpwhois-lite/actions/runs/14203970378/job/39797218684#step:6:3292)
+
+
 
 ### Features:
 - WHOIS info for domains, IPv4/IPv6, AS

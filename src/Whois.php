@@ -25,7 +25,7 @@ final readonly class Whois
 
     private function createQueryHandler(string $query): HandlerInterface
     {
-        if ('' !== $query) {
+        if ('' === $query) {
             return throw new EmptyQueryException('The query is empty');
         }
 
