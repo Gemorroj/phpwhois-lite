@@ -18,11 +18,21 @@ final readonly class Whois
     {
     }
 
+    /**
+     * @throws EmptyQueryException
+     * @throws IpPrivateRangeException
+     * @throws IpReservedRangeException
+     */
     public function process(string $query): Data
     {
         return $this->createQueryHandler($query)->process($query);
     }
 
+    /**
+     * @throws EmptyQueryException
+     * @throws IpPrivateRangeException
+     * @throws IpReservedRangeException
+     */
     private function createQueryHandler(string $query): HandlerInterface
     {
         if ('' === $query) {

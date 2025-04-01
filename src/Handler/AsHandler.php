@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace PHPWhoisLite\Handler;
 
 use PHPWhoisLite\Data;
+use PHPWhoisLite\Exception\NetworkException;
+use PHPWhoisLite\Exception\QueryRateLimitExceededException;
+use PHPWhoisLite\Exception\TimeoutException;
 use PHPWhoisLite\HandlerInterface;
 use PHPWhoisLite\QueryTypeEnum;
 use PHPWhoisLite\WhoisClient;
 use PHPWhoisLite\WhoisServerDetectorTrait;
+use Psr\Cache\InvalidArgumentException;
 
 final readonly class AsHandler implements HandlerInterface
 {
@@ -18,6 +22,12 @@ final readonly class AsHandler implements HandlerInterface
     {
     }
 
+    /**
+     * @throws InvalidArgumentException
+     * @throws TimeoutException
+     * @throws QueryRateLimitExceededException
+     * @throws NetworkException
+     */
     public function process(string $query): Data
     {
         $q = $this->prepareServerQuery($this->defaultWhoisServer, $query);

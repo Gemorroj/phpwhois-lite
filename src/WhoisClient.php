@@ -8,6 +8,7 @@ use PHPWhoisLite\Exception\NetworkException;
 use PHPWhoisLite\Exception\QueryRateLimitExceededException;
 use PHPWhoisLite\Exception\TimeoutException;
 use Psr\Cache\CacheItemPoolInterface;
+use Psr\Cache\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 
 readonly class WhoisClient implements WhoisClientInterface
@@ -21,6 +22,12 @@ readonly class WhoisClient implements WhoisClientInterface
         return \md5(\serialize($args));
     }
 
+    /**
+     * @throws InvalidArgumentException
+     * @throws QueryRateLimitExceededException
+     * @throws TimeoutException
+     * @throws NetworkException
+     */
     public function getData(string $server, string $query): string
     {
         $cacheItem = null;
@@ -66,6 +73,9 @@ readonly class WhoisClient implements WhoisClientInterface
         return $raw;
     }
 
+    /**
+     * @throws NetworkException
+     */
     protected function httpRequest(string $server, string $query): string
     {
         $this->logger?->debug("Initialize CURL connection to HTTP server: $server.$query");
@@ -97,6 +107,10 @@ readonly class WhoisClient implements WhoisClientInterface
         return $raw;
     }
 
+    /**
+     * @throws TimeoutException
+     * @throws NetworkException
+     */
     protected function whoisRequest(string $server, string $query): string
     {
         [$host, $port] = \explode(':', $server, 2);
