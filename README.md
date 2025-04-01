@@ -5,8 +5,14 @@
 [![Continuous Integration](https://github.com/Gemorroj/phpwhois-lite/workflows/Continuous%20Integration/badge.svg)](https://github.com/Gemorroj/phpwhois-lite/actions?query=workflow%3A%22Continuous+Integration%22)
 
 
+### Features:
+- WHOIS info for domains, IPv4/IPv6, AS
+- Support national domains (президент.рф for example)
+- Follow to registrar WHOIS servers (whois.crsnic.net -> whois.nic.ru for example)
+
 ### Requirements:
 - PHP >= 8.2
+- ext-curl
 
 ### Installation:
 ```bash
@@ -26,7 +32,24 @@ $cache = new FilesystemAdapter('phpwhois-lite', 60); // install symfony/cache
 
 $whoisClient = new WhoisClient(cache: $cache, logger: $logger);
 $whois = new Whois($whoisClient);
-$data = $whois->process('127.0.0.1');
+// $data = $whois->process('127.0.0.1'); // throws IpReservedRangeException
+$data = $whois->process('vk.com');
 
 print_r($data);
+/*
+PHPWhoisLite\Data Object
+(
+    [raw] => Domain Name: VK.COM
+Registry Domain ID: 3206186_DOMAIN_COM-VRSN
+...
+
+    [server] => whois.nic.ru:43
+    [type] => PHPWhoisLite\QueryTypeEnum Enum:string
+        (
+            [name] => DOMAIN
+            [value] => domain
+        )
+
+)
+ */
 ```
