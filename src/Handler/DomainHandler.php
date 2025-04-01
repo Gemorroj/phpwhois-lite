@@ -11,7 +11,7 @@ use PHPWhoisLite\HandlerInterface;
 
 final readonly class DomainHandler implements HandlerInterface
 {
-    public function parse(string $query): ?Data
+    public function process(string $query): ?Data
     {
         try {
             $query = (new ToIdn())->convert($query);

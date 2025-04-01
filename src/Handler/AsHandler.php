@@ -7,6 +7,7 @@ namespace PHPWhoisLite\Handler;
 use PHPWhoisLite\Client\WhoisClient;
 use PHPWhoisLite\Data;
 use PHPWhoisLite\HandlerInterface;
+use PHPWhoisLite\QueryTypeEnum;
 use PHPWhoisLite\WhoisServerDetector;
 
 final readonly class AsHandler implements HandlerInterface
@@ -17,7 +18,7 @@ final readonly class AsHandler implements HandlerInterface
     {
     }
 
-    public function parse(string $query): ?Data
+    public function process(string $query): ?Data
     {
         $q = $this->prepareServerQuery($this->defaultWhoisServer, $query);
         $raw = $this->whoisClient->getData($this->defaultWhoisServer, $q);
@@ -34,7 +35,11 @@ final readonly class AsHandler implements HandlerInterface
             }
         }
 
-        return new Data($raw);
+        return new Data(
+            $raw,
+            $findServer ?? $this->defaultWhoisServer,
+            QueryTypeEnum::AS,
+        );
     }
 
     private function prepareServerQuery(string $server, string $query): string

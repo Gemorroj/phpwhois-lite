@@ -18,9 +18,9 @@ final readonly class Whois
     {
     }
 
-    public function lookup(string $query): ?Data
+    public function process(string $query): ?Data
     {
-        return $this->createQueryHandler($query)->parse($query);
+        return $this->createQueryHandler($query)->process($query);
     }
 
     private function createQueryHandler(string $query): HandlerInterface

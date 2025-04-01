@@ -6,7 +6,10 @@ namespace PHPWhoisLite;
 
 final readonly class Data
 {
-    public function __construct(public string $raw)
-    {
+    public function __construct(
+        public string $raw,
+        public string $server,
+        public QueryTypeEnum $type,
+    ) {
     }
 }

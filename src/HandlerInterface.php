@@ -6,5 +6,5 @@ namespace PHPWhoisLite;
 
 interface HandlerInterface
 {
-    public function parse(string $query): ?Data;
+    public function process(string $query): ?Data;
 }

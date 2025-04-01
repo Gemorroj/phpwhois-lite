@@ -26,7 +26,7 @@ $cache = new FilesystemAdapter('phpwhois-lite', 60); // install symfony/cache
 
 $whoisClient = new WhoisClient(cache: $cache, logger: $logger);
 $whois = new Whois($whoisClient);
-$data = $whois->lookup('127.0.0.1');
+$data = $whois->process('127.0.0.1');
 
 print_r($data);
 ```

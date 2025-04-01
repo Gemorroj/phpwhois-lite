@@ -7,6 +7,7 @@ namespace PHPWhoisLite\Handler;
 use PHPWhoisLite\Client\WhoisClient;
 use PHPWhoisLite\Data;
 use PHPWhoisLite\HandlerInterface;
+use PHPWhoisLite\QueryTypeEnum;
 use PHPWhoisLite\WhoisServerDetector;
 
 final readonly class IpHandler implements HandlerInterface
@@ -17,7 +18,7 @@ final readonly class IpHandler implements HandlerInterface
     {
     }
 
-    public function parse(string $query): ?Data
+    public function process(string $query): ?Data
     {
         $q = $this->prepareServerQuery($this->defaultWhoisServer, $query);
         $raw = $this->whoisClient->getData($this->defaultWhoisServer, $q);
@@ -34,7 +35,20 @@ final readonly class IpHandler implements HandlerInterface
             }
         }
 
-        return new Data($raw);
+        return new Data(
+            $raw,
+            $findServer ?? $this->defaultWhoisServer,
+            $this->getIpType($query),
+        );
+    }
+
+    private function getIpType(string $ip): QueryTypeEnum
+    {
+        if (\filter_var($ip, \FILTER_VALIDATE_IP, \FILTER_FLAG_IPV6)) {
+            return QueryTypeEnum::IPv6;
+        }
+
+        return QueryTypeEnum::IPv4;
     }
 
     private function prepareServerQuery(string $server, string $query): string
