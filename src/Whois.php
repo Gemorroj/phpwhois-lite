@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace PHPWhoisLite;
 
-use Algo26\IdnaConvert\Exception\AlreadyPunycodeException;
-use Algo26\IdnaConvert\ToIdn;
 use PHPWhoisLite\Client\WhoisClient;
+use PHPWhoisLite\Exception\EmptyQueryException;
+use PHPWhoisLite\Exception\IpPrivateRangeException;
+use PHPWhoisLite\Exception\IpReservedRangeException;
 use PHPWhoisLite\Handler\AsHandler;
+use PHPWhoisLite\Handler\DomainHandler;
 use PHPWhoisLite\Handler\IpHandler;
 
 final readonly class Whois
@@ -16,65 +18,47 @@ final readonly class Whois
     {
     }
 
-    /**
-     * @throws \Algo26\IdnaConvert\Exception\InvalidCharacterException
-     */
     public function lookup(string $query): ?Data
     {
-        $queryType = $this->getQueryType($query);
-
-        switch ($queryType) {
-            case QueryType::IP:
-                $handler = new IpHandler($this->whoisClient);
-
-                return $handler->parse($query);
-                break;
-            case QueryType::AS:
-                $handler = new AsHandler($this->whoisClient);
-
-                return $handler->parse($query);
-                break;
-            case QueryType::DOMAIN:
-                try {
-                    $query = (new ToIdn())->convert($query);
-                } catch (AlreadyPunycodeException $e) {
-                    // $query is already a Punycode
-                }
-                $handler = new DomainHandler(); // todo
-                break;
-        }
-
-        return null;
+        return $this->createQueryHandler($query)->parse($query);
     }
 
-    private function getQueryType(string $query): ?QueryType
+    private function createQueryHandler(string $query): HandlerInterface
     {
-        if ($this->validIp($query, false)) {
-            if ($this->validIp($query, true)) {
-                return QueryType::IP;
+        if ($this->validIp($query)) {
+            if ($this->isIpPrivateRange($query)) {
+                return throw IpPrivateRangeException::create($query);
+            }
+            if ($this->isIpReservedRange($query)) {
+                return throw IpReservedRangeException::create($query);
             }
 
-            return null;
+            return new IpHandler($this->whoisClient);
         }
 
         if ('' !== $query) {
             if (\str_contains($query, '.')) {
-                return QueryType::DOMAIN;
+                return new DomainHandler();
             }
 
-            return QueryType::AS;
+            return new AsHandler($this->whoisClient);
         }
 
-        return null;
+        return throw new EmptyQueryException('The query is empty');
     }
 
-    private function validIp(string $ip, bool $strict = true): bool
+    private function validIp(string $ip): bool
     {
-        $flags = \FILTER_FLAG_IPV4 | \FILTER_FLAG_IPV6;
-        if ($strict) {
-            $flags = \FILTER_FLAG_IPV4 | \FILTER_FLAG_IPV6 | \FILTER_FLAG_NO_PRIV_RANGE/* | \FILTER_FLAG_NO_RES_RANGE */;
-        }
+        return false !== \filter_var($ip, \FILTER_VALIDATE_IP, ['flags' => \FILTER_FLAG_IPV4 | \FILTER_FLAG_IPV6]);
+    }
 
-        return false !== \filter_var($ip, \FILTER_VALIDATE_IP, ['flags' => $flags]);
+    private function isIpPrivateRange(string $ip): bool
+    {
+        return false !== \filter_var($ip, \FILTER_VALIDATE_IP, ['flags' => \FILTER_FLAG_IPV4 | \FILTER_FLAG_IPV6 | \FILTER_FLAG_NO_PRIV_RANGE]);
+    }
+
+    private function isIpReservedRange(string $ip): bool
+    {
+        return false !== \filter_var($ip, \FILTER_VALIDATE_IP, ['flags' => \FILTER_FLAG_IPV4 | \FILTER_FLAG_IPV6 | \FILTER_FLAG_NO_RES_RANGE]);
     }
 }

@@ -4,6 +4,6 @@ declare(strict_types=1);
 
 namespace PHPWhoisLite\Exception;
 
-final class NetworkException extends \Exception
+abstract class HandlerException extends \Exception
 {
 }
