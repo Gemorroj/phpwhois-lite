@@ -41,14 +41,13 @@ final class AsHandlerTest extends BaseTestCase
         self::assertEquals(QueryTypeEnum::AS, $data->type);
     }
 
-    // todo
     public function testLacnic(): void
     {
         $handler = new AsHandler($this->createLoggedClient());
         $data = $handler->process('AS28001');
         // \file_put_contents('/test.txt', $data->raw);
         // var_dump($data->raw);
-        self::assertStringContainsString('???', $data->raw);
+        self::assertStringContainsString('responsible: Ernesto Majó', $data->raw);
         self::assertEquals('whois.lacnic.net:43', $data->server);
         self::assertEquals(QueryTypeEnum::AS, $data->type);
     }

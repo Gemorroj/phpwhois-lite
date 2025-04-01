@@ -41,14 +41,13 @@ final class IpHandlerTest extends BaseTestCase
         self::assertEquals(QueryTypeEnum::IPv4, $data->type);
     }
 
-    // todo
     public function testLacnicIpv4(): void
     {
         $handler = new IpHandler($this->createLoggedClient());
         $data = $handler->process('200.3.13.10');
         // \file_put_contents('/test.txt', $data->raw);
         // var_dump($data->raw);
-        self::assertStringContainsString('???', $data->raw);
+        self::assertStringContainsString('aut-num:     AS28001', $data->raw);
         self::assertEquals('whois.lacnic.net:43', $data->server);
         self::assertEquals(QueryTypeEnum::IPv4, $data->type);
     }
