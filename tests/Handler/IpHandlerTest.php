@@ -8,6 +8,28 @@ use PHPWhoisLite\Tests\BaseTestCase;
 
 final class IpHandlerTest extends BaseTestCase
 {
+    public function testReserved(): void
+    {
+        $handler = new IpHandler($this->createLoggedClient());
+        $data = $handler->process('127.0.0.1');
+        // \file_put_contents('/test.txt', $data->raw);
+        // var_dump($data->raw);
+        self::assertStringContainsString('NetName:        SPECIAL-IPV4-LOOPBACK-IANA-RESERVED', $data->raw);
+        self::assertEquals('whois.arin.net:43', $data->server); // default server
+        self::assertEquals(QueryTypeEnum::IPv4, $data->type);
+    }
+
+    public function testPrivate(): void
+    {
+        $handler = new IpHandler($this->createLoggedClient());
+        $data = $handler->process('192.168.0.1');
+        // \file_put_contents('/test.txt', $data->raw);
+        // var_dump($data->raw);
+        self::assertStringContainsString('NetName:        PRIVATE-ADDRESS-CBLK-RFC1918-IANA-RESERVED', $data->raw);
+        self::assertEquals('whois.arin.net:43', $data->server); // default server
+        self::assertEquals(QueryTypeEnum::IPv4, $data->type);
+    }
+
     public function testApnicIpv4(): void
     {
         $handler = new IpHandler($this->createLoggedClient());

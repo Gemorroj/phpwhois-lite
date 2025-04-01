@@ -60,4 +60,17 @@ final class DomainHandlerTest extends BaseTestCase
         self::assertEquals('whois.ripn.net:43', $data->server);
         self::assertEquals(QueryTypeEnum::DOMAIN, $data->type);
     }
+
+    // force whois server
+    public function testSirusSu(): void
+    {
+        $whoisServerList = new WhoisServerList();
+        $handler = new DomainHandler($this->createLoggedClient(), $whoisServerList);
+        $data = $handler->process('sirus.su', 'whois.tcinet.ru');
+        // \file_put_contents('/test.txt', $data->raw);
+        // \var_dump($data);
+        self::assertStringContainsString('e-mail:        sir.nyll@gmail.com', $data->raw);
+        self::assertEquals('whois.tcinet.ru:43', $data->server);
+        self::assertEquals(QueryTypeEnum::DOMAIN, $data->type);
+    }
 }

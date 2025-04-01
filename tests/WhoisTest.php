@@ -2,27 +2,32 @@
 
 namespace PHPWhoisLite\Tests;
 
-use PHPWhoisLite\Exception\IpPrivateRangeException;
-use PHPWhoisLite\Exception\IpReservedRangeException;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPWhoisLite\Handler\AsHandler;
+use PHPWhoisLite\Handler\DomainHandler;
+use PHPWhoisLite\Handler\IpHandler;
 use PHPWhoisLite\Whois;
 
 final class WhoisTest extends BaseTestCase
 {
-    public function testReservedRangeIp(): void
+    #[DataProvider('getQueries')]
+    public function testReservedRangeIp(string $query, string $className): void
     {
         $whois = new Whois();
-        $this->expectException(IpReservedRangeException::class);
-        $data = $whois->process('127.0.0.1');
-        // \file_put_contents('/test.txt', $data->raw);
-        // var_dump($data->raw);
+        $reflectionObject = new \ReflectionObject($whois);
+        $reflectionMethod = $reflectionObject->getMethod('createQueryHandler');
+        $handler = $reflectionMethod->invoke($whois, $query);
+
+        self::assertEquals($handler::class, $className);
     }
 
-    public function testPrivateRangeIp(): void
+    public static function getQueries(): \Generator
     {
-        $whois = new Whois();
-        $this->expectException(IpPrivateRangeException::class);
-        $data = $whois->process('192.168.1.1');
-        // \file_put_contents('/test.txt', $data->raw);
-        // var_dump($data->raw);
+        yield ['127.0.0.1', IpHandler::class];
+        yield ['192.168.0.1', IpHandler::class];
+        yield ['1.1.1.1', IpHandler::class];
+        yield ['AS220', AsHandler::class];
+        yield ['12345', AsHandler::class];
+        yield ['ya.ru', DomainHandler::class];
     }
 }

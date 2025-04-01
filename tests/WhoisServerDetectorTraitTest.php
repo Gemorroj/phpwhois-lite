@@ -47,4 +47,29 @@ final class WhoisServerDetectorTraitTest extends BaseTestCase
         yield ['   Registrar WHOIS Server: file://passwd.com', null];
         yield ['   Registrar WHOIS Server: ', null];
     }
+
+    #[DataProvider('getServers')]
+    public function testPrepareWhoisServer(string $server, ?string $preparedServer): void
+    {
+        try {
+            $result = $this->prepareWhoisServer($server);
+        } catch (\Exception) {
+            $result = null;
+        }
+        self::assertEquals($preparedServer, $result);
+    }
+
+    public static function getServers(): \Generator
+    {
+        yield ['localhost', 'localhost:43'];
+        yield ['whois.nic.ru', 'whois.nic.ru:43'];
+        yield ['rwhois://whois.nic.ru', 'whois.nic.ru:43'];
+        yield ['whois://whois.nic.ru', 'whois.nic.ru:43'];
+        yield ['whois.nic.ru:44', 'whois.nic.ru:44'];
+        yield ['http://test.com/?123&456', 'http://test.com/?123&456'];
+        yield ['https://test.com/?123&456', 'https://test.com/?123&456'];
+        yield ['file://passwords', null];
+        yield ['/passwords', null];
+        yield ['\\passwords', null];
+    }
 }

@@ -10,6 +10,7 @@ use Algo26\IdnaConvert\ToIdn;
 use PHPWhoisLite\Data;
 use PHPWhoisLite\Exception\DomainWhoisServerNotFoundException;
 use PHPWhoisLite\Exception\InvalidCharacterException;
+use PHPWhoisLite\Exception\InvalidWhoisServerException;
 use PHPWhoisLite\Exception\NetworkException;
 use PHPWhoisLite\Exception\QueryRateLimitExceededException;
 use PHPWhoisLite\Exception\TimeoutException;
@@ -35,8 +36,9 @@ final readonly class DomainHandler implements HandlerInterface
      * @throws QueryRateLimitExceededException
      * @throws TimeoutException
      * @throws NetworkException
+     * @throws InvalidWhoisServerException
      */
-    public function process(string $query): Data
+    public function process(string $query, ?string $forceWhoisServer = null): Data
     {
         try {
             $query = (new ToIdn())->convert($query);
@@ -46,21 +48,27 @@ final readonly class DomainHandler implements HandlerInterface
             throw new InvalidCharacterException('Invalid query: '.$query, previous: $e);
         }
 
-        $findServer = $this->findServer($this->whoisServerList, $query);
-        if (null === $findServer) {
-            throw DomainWhoisServerNotFoundException::create($query);
+        if (null !== $forceWhoisServer) {
+            $server = $this->prepareWhoisServer($forceWhoisServer);
+        } else {
+            $server = $this->findServer($this->whoisServerList, $query);
+            if (null === $server) {
+                throw DomainWhoisServerNotFoundException::create($query);
+            }
         }
 
-        $raw = $this->whoisClient->getData($findServer, $query);
+        $raw = $this->whoisClient->getData($server, $query);
 
-        $registrarServer = $this->findRegistrarServer($raw);
-        if ($registrarServer && $registrarServer !== $findServer) {
-            $raw = $this->whoisClient->getData($registrarServer, $query);
+        if (!$forceWhoisServer) {
+            $registrarServer = $this->findRegistrarServer($raw);
+            if ($registrarServer && $registrarServer !== $server) {
+                $raw = $this->whoisClient->getData($registrarServer, $query);
+            }
         }
 
         return new Data(
             $raw,
-            $registrarServer ?? $findServer,
+            $registrarServer ?? $server,
             QueryTypeEnum::DOMAIN,
         );
     }

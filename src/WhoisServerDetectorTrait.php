@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PHPWhoisLite;
 
+use PHPWhoisLite\Exception\InvalidWhoisServerException;
 use PHPWhoisLite\Resource\WhoisServerList;
 
 trait WhoisServerDetectorTrait
@@ -69,27 +70,48 @@ trait WhoisServerDetectorTrait
             if ('' === $server) {
                 return null;
             }
-            $server = \strtolower($server);
 
-            if (\str_starts_with($server, 'rwhois://')) {
-                $server = \substr($server, 9);
+            try {
+                return $this->prepareWhoisServer($server);
+            } catch (InvalidWhoisServerException) {
+                return null;
             }
-            if (\str_starts_with($server, 'whois://')) {
-                $server = \substr($server, 8);
-            }
-            $parsedServer = \parse_url($server);
-            if ($parsedServer['path'] === $server) {
-                $server .= ':43'; // add default WHOIS port
-            }
-            if (isset($parsedServer['scheme'])) {
-                if (!\in_array($parsedServer['scheme'], ['http', 'https'], true)) {
-                    $server = ''; // something strange scheme. probably fake response (file scheme for example)
-                }
-            }
-
-            return '' === $server ? null : $server;
         }
 
         return null;
+    }
+
+    /**
+     * @throws InvalidWhoisServerException
+     */
+    private function prepareWhoisServer(string $server): string
+    {
+        $server = \strtolower($server);
+
+        if (\str_starts_with($server, 'rwhois://')) {
+            $server = \substr($server, 9);
+        }
+        if (\str_starts_with($server, 'whois://')) {
+            $server = \substr($server, 8);
+        }
+
+        $parsedServer = \parse_url($server);
+        if (isset($parsedServer['path']) && $parsedServer['path'] === $server) {
+            // https://stackoverflow.com/questions/1418423/the-hostname-regex
+            if (!\preg_match('/^(?=.{1,255}$)[0-9A-Za-z](?:(?:[0-9A-Za-z]|-){0,61}[0-9A-Za-z])?(?:\.[0-9A-Za-z](?:(?:[0-9A-Za-z]|-){0,61}[0-9A-Za-z])?)*\.?$/', $parsedServer['path'])) {
+                // something strange path. /passwd for example
+                throw new InvalidWhoisServerException('Invalid WHOIS server path.');
+            }
+
+            $server .= ':43'; // add default WHOIS port
+        }
+        if (isset($parsedServer['scheme'])) {
+            if (!\in_array($parsedServer['scheme'], ['http', 'https'], true)) {
+                // something strange scheme. file scheme for example
+                throw new InvalidWhoisServerException('Invalid WHOIS server scheme. Allowed values are: rwhois, whois, http, https');
+            }
+        }
+
+        return $server;
     }
 }

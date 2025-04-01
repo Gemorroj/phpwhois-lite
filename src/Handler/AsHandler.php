@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PHPWhoisLite\Handler;
 
 use PHPWhoisLite\Data;
+use PHPWhoisLite\Exception\InvalidWhoisServerException;
 use PHPWhoisLite\Exception\NetworkException;
 use PHPWhoisLite\Exception\QueryRateLimitExceededException;
 use PHPWhoisLite\Exception\TimeoutException;
@@ -27,21 +28,30 @@ final readonly class AsHandler implements HandlerInterface
      * @throws TimeoutException
      * @throws QueryRateLimitExceededException
      * @throws NetworkException
+     * @throws InvalidWhoisServerException
      */
-    public function process(string $query): Data
+    public function process(string $query, ?string $forceWhoisServer = null): Data
     {
-        $q = $this->prepareServerQuery($this->defaultWhoisServer, $query);
-        $raw = $this->whoisClient->getData($this->defaultWhoisServer, $q);
+        if (null !== $forceWhoisServer) {
+            $server = $this->prepareWhoisServer($forceWhoisServer);
+        } else {
+            $server = $this->defaultWhoisServer;
+        }
 
-        $findServer = $this->findBaseServer($raw);
-        if ($findServer && $findServer !== $this->defaultWhoisServer) {
-            $q = $this->prepareServerQuery($findServer, $query);
-            $raw = $this->whoisClient->getData($findServer, $q);
+        $q = $this->prepareServerQuery($server, $query);
+        $raw = $this->whoisClient->getData($server, $q);
+
+        if (!$forceWhoisServer) {
+            $baseServer = $this->findBaseServer($raw);
+            if ($baseServer && $baseServer !== $server) {
+                $q = $this->prepareServerQuery($baseServer, $query);
+                $raw = $this->whoisClient->getData($baseServer, $q);
+            }
         }
 
         return new Data(
             $raw,
-            $findServer ?? $this->defaultWhoisServer,
+            $baseServer ?? $server,
             QueryTypeEnum::AS,
         );
     }

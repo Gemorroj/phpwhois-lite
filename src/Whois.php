@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace PHPWhoisLite;
 
 use PHPWhoisLite\Exception\EmptyQueryException;
-use PHPWhoisLite\Exception\IpPrivateRangeException;
-use PHPWhoisLite\Exception\IpReservedRangeException;
 use PHPWhoisLite\Handler\AsHandler;
 use PHPWhoisLite\Handler\DomainHandler;
 use PHPWhoisLite\Handler\IpHandler;
@@ -20,18 +18,14 @@ final readonly class Whois
 
     /**
      * @throws EmptyQueryException
-     * @throws IpPrivateRangeException
-     * @throws IpReservedRangeException
      */
-    public function process(string $query): Data
+    public function process(string $query, ?string $forceWhoisServer = null): Data
     {
-        return $this->createQueryHandler($query)->process($query);
+        return $this->createQueryHandler($query)->process($query, $forceWhoisServer);
     }
 
     /**
      * @throws EmptyQueryException
-     * @throws IpPrivateRangeException
-     * @throws IpReservedRangeException
      */
     private function createQueryHandler(string $query): HandlerInterface
     {
@@ -40,13 +34,6 @@ final readonly class Whois
         }
 
         if ($this->validIp($query)) {
-            if ($this->isIpPrivateRange($query)) {
-                return throw IpPrivateRangeException::create($query);
-            }
-            if ($this->isIpReservedRange($query)) {
-                return throw IpReservedRangeException::create($query);
-            }
-
             $whoisClient = $this->whoisClient ?? new WhoisClient();
 
             return new IpHandler($whoisClient);
@@ -67,15 +54,5 @@ final readonly class Whois
     private function validIp(string $ip): bool
     {
         return false !== \filter_var($ip, \FILTER_VALIDATE_IP, ['flags' => \FILTER_FLAG_IPV4 | \FILTER_FLAG_IPV6]);
-    }
-
-    private function isIpPrivateRange(string $ip): bool
-    {
-        return false === \filter_var($ip, \FILTER_VALIDATE_IP, ['flags' => \FILTER_FLAG_IPV4 | \FILTER_FLAG_IPV6 | \FILTER_FLAG_NO_PRIV_RANGE]);
-    }
-
-    private function isIpReservedRange(string $ip): bool
-    {
-        return false === \filter_var($ip, \FILTER_VALIDATE_IP, ['flags' => \FILTER_FLAG_IPV4 | \FILTER_FLAG_IPV6 | \FILTER_FLAG_NO_RES_RANGE]);
     }
 }
