@@ -4,6 +4,6 @@ declare(strict_types=1);
 
 namespace PHPWhoisLite\Exception;
 
-class NetworkException extends \Exception
+final class TimeoutException extends NetworkException
 {
 }

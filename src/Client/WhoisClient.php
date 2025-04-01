@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace PHPWhoisLite\Client;
 
 use PHPWhoisLite\Exception\NetworkException;
+use PHPWhoisLite\Exception\TimeoutException;
 use PHPWhoisLite\WhoisClientInterface;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Log\LoggerInterface;
 
 readonly class WhoisClient implements WhoisClientInterface
 {
-    public function __construct(private int $timeout = 10, private int $buffer = 1024, private ?CacheItemPoolInterface $cache = null, private ?LoggerInterface $logger = null)
+    public function __construct(private int $timeout = 2, private int $buffer = 1024, private ?CacheItemPoolInterface $cache = null, private ?LoggerInterface $logger = null)
     {
     }
 
@@ -45,18 +46,31 @@ readonly class WhoisClient implements WhoisClientInterface
         \stream_set_blocking($ptr, false);
 
         $this->logger?->debug("Write data \"$query\"");
-        \fwrite($ptr, $query."\r\n");
+        $write = \fwrite($ptr, $query."\r\n");
+        if (false === $write) {
+            $this->logger?->debug("Can't write data to $server");
+            $error = \error_get_last();
+            throw new NetworkException($error['message']);
+        }
 
         $raw = '';
         $_ = null;
         $r = [$ptr];
+        $startTime = \time();
 
         $this->logger?->debug('Read data...');
         while (!\feof($ptr)) {
-            if ($r && \stream_select($r, $_, $_, $this->timeout)) {
+            if (false !== \stream_select($r, $_, $_, $this->timeout)) {
                 $str = \fgets($ptr, $this->buffer);
                 if (false !== $str) {
                     $raw .= $str;
+                }
+
+                if (\time() - $startTime > $this->timeout) {
+                    $this->logger?->debug('Timeout reading from '.$server);
+                    $this->logger?->debug('Close connection');
+                    @\fclose($ptr);
+                    throw new TimeoutException('Timeout reading from '.$server);
                 }
             }
         }

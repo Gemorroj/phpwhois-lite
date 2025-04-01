@@ -38,6 +38,7 @@ final readonly class Whois
 
         if ('' !== $query) {
             if (\str_contains($query, '.')) {
+                // todo: parse http://whoisservers.net/
                 return new DomainHandler();
             }
 
