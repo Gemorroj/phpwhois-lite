@@ -47,25 +47,13 @@ final readonly class IpHandler implements HandlerInterface
 
     private function prepareServerQuery(string $server, string $query): string
     {
-        switch ($server) {
-            case 'whois.ripe.net:43':
-                return $query;
-                break;
-            case 'whois.apnic.net:43':
-                return $query;
-                break;
-            case 'whois.lacnic.net:43':
-                return $query; // fixme: server is down?
-                break;
-            case 'whois.afrinic.net:43':
-                return $query;
-                break;
-            case 'whois.arin.net:43':
-                return 'n '.$query;
-                break;
-            default:
-                return $query;
-                break;
-        }
+        return match ($server) {
+            'whois.ripe.net:43' => $query,
+            'whois.apnic.net:43' => $query,
+            'whois.lacnic.net:43' => $query,
+            'whois.afrinic.net:43' => $query,
+            'whois.arin.net:43' => 'n '.$query,
+            default => $query,
+        };
     }
 }

@@ -45,5 +45,6 @@ final class WhoisServerDetectorTraitTest extends BaseTestCase
         yield ['   Registrar WHOIS Server: rwhois://whois.nic.ru', 'whois.nic.ru:43'];
         yield ['   test: string', null];
         yield ['   Registrar WHOIS Server: file://passwd.com', null];
+        yield ['   Registrar WHOIS Server: ', null];
     }
 }

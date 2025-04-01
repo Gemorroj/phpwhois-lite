@@ -33,4 +33,18 @@ final class DomainHandlerTest extends BaseTestCase
         self::assertEquals('whois.nic.br:43', $data->server);
         self::assertEquals(QueryTypeEnum::DOMAIN, $data->type);
     }
+
+    // http server
+    public function testRegistryCoZa(): void
+    {
+        $whoisServerList = new WhoisServerList();
+        $handler = new DomainHandler($this->createLoggedClient(), $whoisServerList);
+        $data = $handler->process('registry.co.za');
+        // \file_put_contents('/test.txt', $data->raw);
+        // \var_dump($data);
+        self::assertStringStartsNotWith('<pre>', $data->raw);
+        self::assertStringContainsString('Registrar URL: www.TMU.com', $data->raw);
+        self::assertEquals('http://whois.registry.net.za/whois/whois.sh?Domain=', $data->server);
+        self::assertEquals(QueryTypeEnum::DOMAIN, $data->type);
+    }
 }

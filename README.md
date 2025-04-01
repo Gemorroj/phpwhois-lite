@@ -5,7 +5,7 @@
 [![Continuous Integration](https://github.com/Gemorroj/phpwhois-lite/workflows/Continuous%20Integration/badge.svg)](https://github.com/Gemorroj/phpwhois-lite/actions?query=workflow%3A%22Continuous+Integration%22)
 
 ### TODO:
-- research whois.lacnic.net server (see https://github.com/Gemorroj/phpwhois-lite/actions/runs/14203970378/job/39797218684#step:6:3292)
+- check the whois server list
 
 
 ### Features:

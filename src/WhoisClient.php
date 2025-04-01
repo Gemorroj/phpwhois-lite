@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PHPWhoisLite;
 
 use PHPWhoisLite\Exception\NetworkException;
+use PHPWhoisLite\Exception\QueryRateLimitExceededException;
 use PHPWhoisLite\Exception\TimeoutException;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Log\LoggerInterface;
@@ -39,7 +40,12 @@ readonly class WhoisClient implements WhoisClientInterface
             $raw = $this->whoisRequest($server, $query);
         }
 
+        if (\str_contains($raw, 'Query rate limit exceeded')) {
+            throw QueryRateLimitExceededException::create($server);
+        }
+
         $raw = $this->convertToUtf8($raw);
+        $raw = \mb_trim($raw);
 
         if ($cacheItem) {
             $this->logger?->debug('Save cache');
@@ -70,7 +76,7 @@ readonly class WhoisClient implements WhoisClientInterface
         }
         \curl_setopt($fp, \CURLOPT_ENCODING, '');
         \curl_setopt($fp, \CURLOPT_RETURNTRANSFER, true);
-        \curl_setopt($fp, \CURLOPT_FOLLOWLOCATION, false);
+        \curl_setopt($fp, \CURLOPT_FOLLOWLOCATION, true); // http -> https
         \curl_setopt($fp, \CURLOPT_TIMEOUT, $this->timeout);
         \curl_setopt($fp, \CURLOPT_BUFFERSIZE, $this->buffer);
 
@@ -85,6 +91,8 @@ readonly class WhoisClient implements WhoisClientInterface
 
         \curl_close($fp);
         $this->logger?->debug('Close CURL connection');
+
+        $raw = \strip_tags($raw);
 
         return $raw;
     }
