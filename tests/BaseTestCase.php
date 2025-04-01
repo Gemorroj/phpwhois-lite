@@ -3,7 +3,7 @@
 namespace PHPWhoisLite\Tests;
 
 use PHPUnit\Framework\TestCase;
-use PHPWhoisLite\Client\WhoisClient;
+use PHPWhoisLite\WhoisClient;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Logger\ConsoleLogger;

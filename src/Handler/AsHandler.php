@@ -4,35 +4,29 @@ declare(strict_types=1);
 
 namespace PHPWhoisLite\Handler;
 
-use PHPWhoisLite\Client\WhoisClient;
 use PHPWhoisLite\Data;
 use PHPWhoisLite\HandlerInterface;
 use PHPWhoisLite\QueryTypeEnum;
-use PHPWhoisLite\WhoisServerDetector;
+use PHPWhoisLite\WhoisClient;
+use PHPWhoisLite\WhoisServerDetectorTrait;
 
 final readonly class AsHandler implements HandlerInterface
 {
-    use WhoisServerDetector;
+    use WhoisServerDetectorTrait;
 
     public function __construct(private WhoisClient $whoisClient, private string $defaultWhoisServer = 'whois.arin.net:43')
     {
     }
 
-    public function process(string $query): ?Data
+    public function process(string $query): Data
     {
         $q = $this->prepareServerQuery($this->defaultWhoisServer, $query);
         $raw = $this->whoisClient->getData($this->defaultWhoisServer, $q);
-        if (null === $raw) {
-            return null;
-        }
 
         $findServer = $this->findBaseServer($raw);
         if ($findServer && $findServer !== $this->defaultWhoisServer) {
             $q = $this->prepareServerQuery($findServer, $query);
             $raw = $this->whoisClient->getData($findServer, $q);
-            if (null === $raw) {
-                return null;
-            }
         }
 
         return new Data(

@@ -16,10 +16,10 @@ composer require gemorroj/phpwhois-lite
 ### Example:
 ```php
 <?php
-use PHPWhoisLite\Client\WhoisClient;
 use PHPWhoisLite\Whois;
-use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+use PHPWhoisLite\WhoisClient;
 use Psr\Log\NullLogger;
+use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 
 $logger = new NullLogger();
 $cache = new FilesystemAdapter('phpwhois-lite', 60); // install symfony/cache

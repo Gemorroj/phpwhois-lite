@@ -6,5 +6,5 @@ namespace PHPWhoisLite;
 
 interface WhoisClientInterface
 {
-    public function getData(string $server, string $query): ?string;
+    public function getData(string $server, string $query): string;
 }

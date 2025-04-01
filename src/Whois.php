@@ -4,27 +4,31 @@ declare(strict_types=1);
 
 namespace PHPWhoisLite;
 
-use PHPWhoisLite\Client\WhoisClient;
 use PHPWhoisLite\Exception\EmptyQueryException;
 use PHPWhoisLite\Exception\IpPrivateRangeException;
 use PHPWhoisLite\Exception\IpReservedRangeException;
 use PHPWhoisLite\Handler\AsHandler;
 use PHPWhoisLite\Handler\DomainHandler;
 use PHPWhoisLite\Handler\IpHandler;
+use PHPWhoisLite\Resource\WhoisServerList;
 
 final readonly class Whois
 {
-    public function __construct(private WhoisClient $whoisClient = new WhoisClient())
+    public function __construct(private ?WhoisClient $whoisClient = null, private ?WhoisServerList $whoisServerList = null)
     {
     }
 
-    public function process(string $query): ?Data
+    public function process(string $query): Data
     {
         return $this->createQueryHandler($query)->process($query);
     }
 
     private function createQueryHandler(string $query): HandlerInterface
     {
+        if ('' !== $query) {
+            return throw new EmptyQueryException('The query is empty');
+        }
+
         if ($this->validIp($query)) {
             if ($this->isIpPrivateRange($query)) {
                 return throw IpPrivateRangeException::create($query);
@@ -33,19 +37,21 @@ final readonly class Whois
                 return throw IpReservedRangeException::create($query);
             }
 
-            return new IpHandler($this->whoisClient);
+            $whoisClient = $this->whoisClient ?? new WhoisClient();
+
+            return new IpHandler($whoisClient);
         }
 
-        if ('' !== $query) {
-            if (\str_contains($query, '.')) {
-                // todo: parse http://whoisservers.net/
-                return new DomainHandler();
-            }
+        if (\str_contains($query, '.')) {
+            $whoisClient = $this->whoisClient ?? new WhoisClient();
+            $whoisServerList = $this->whoisServerList ?? new WhoisServerList();
 
-            return new AsHandler($this->whoisClient);
+            return new DomainHandler($whoisClient, $whoisServerList);
         }
 
-        return throw new EmptyQueryException('The query is empty');
+        $whoisClient = $this->whoisClient ?? new WhoisClient();
+
+        return new AsHandler($whoisClient);
     }
 
     private function validIp(string $ip): bool
