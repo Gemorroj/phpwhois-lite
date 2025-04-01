@@ -12,7 +12,7 @@ use Psr\Log\LoggerInterface;
 
 readonly class WhoisClient implements WhoisClientInterface
 {
-    public function __construct(private int $timeout = 2, private int $buffer = 1024, private ?CacheItemPoolInterface $cache = null, private ?LoggerInterface $logger = null)
+    public function __construct(private int $timeout = 5, private int $buffer = 1024, private ?CacheItemPoolInterface $cache = null, private ?LoggerInterface $logger = null)
     {
     }
 
