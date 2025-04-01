@@ -64,7 +64,7 @@ trait WhoisServerDetectorTrait
     private function findRegistrarServer(string $raw): ?string
     {
         $matches = [];
-        if (\preg_match('/Registrar WHOIS Server:(.+)/iu', $raw, $matches)) {
+        if (\preg_match('/Registrar WHOIS Server:(.+)/i', $raw, $matches)) {
             $server = \trim($matches[1]);
             if ('' === $server) {
                 return null;
