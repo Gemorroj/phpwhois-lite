@@ -12,6 +12,7 @@
     "require": {
         "php": ">=8.2",
         "ext-curl": "*",
+        "ext-pcre": "*",
         "algo26-matthias/idna-convert": "^4.2",
         "psr/log": "^3.0.2",
         "psr/cache": "^3.0.0"

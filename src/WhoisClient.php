@@ -39,10 +39,22 @@ readonly class WhoisClient implements WhoisClientInterface
             $raw = $this->whoisRequest($server, $query);
         }
 
+        $raw = $this->convertToUtf8($raw);
+
         if ($cacheItem) {
             $this->logger?->debug('Save cache');
             $cacheItem->set($raw);
             $this->cache->save($cacheItem);
+        }
+
+        return $raw;
+    }
+
+    protected function convertToUtf8(string $raw): string
+    {
+        $isUtf8 = (bool) \preg_match('//u', $raw);
+        if (!$isUtf8) {
+            $raw = \mb_convert_encoding($raw, 'UTF-8', 'ISO-8859-1'); // fixme: detect encoding. in fact mb_detect_encoding is not working
         }
 
         return $raw;

@@ -20,4 +20,17 @@ final class DomainHandlerTest extends BaseTestCase
         self::assertEquals('whois.nic.ru:43', $data->server);
         self::assertEquals(QueryTypeEnum::DOMAIN, $data->type);
     }
+
+    // non UTF-8 server
+    public function testRegistroBr(): void
+    {
+        $whoisServerList = new WhoisServerList();
+        $handler = new DomainHandler($this->createLoggedClient(), $whoisServerList);
+        $data = $handler->process('registro.br');
+        // \file_put_contents('/test.txt', $data->raw);
+        // \var_dump($data);
+        self::assertStringContainsString('Núcleo de Inf. e Coord. do Ponto BR - NIC.BR', $data->raw);
+        self::assertEquals('whois.nic.br:43', $data->server);
+        self::assertEquals(QueryTypeEnum::DOMAIN, $data->type);
+    }
 }
