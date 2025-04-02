@@ -30,6 +30,7 @@ final class WhoisServerDetectorTraitTest extends BaseTestCase
         yield ['vk.com', 'whois.crsnic.net:43'];
         yield ['ya.ru', 'whois.ripn.net:43'];
         yield ['test.org.ru', 'whois.nic.ru:43'];
+        yield ['domain.unknowntld', (new WhoisServerList())->whoisServerDefault];
     }
 
     #[DataProvider('getRegistrarData')]
@@ -46,6 +47,9 @@ final class WhoisServerDetectorTraitTest extends BaseTestCase
         yield ['   test: string', null];
         yield ['   Registrar WHOIS Server: file://passwd.com', null];
         yield ['   Registrar WHOIS Server: ', null];
+        yield ['whois:        whois.tcinet.ru ', null]; // the pattern from whois.iana.org
+        yield ['whois:         ', null];
+        yield [' whois:', null];
     }
 
     #[DataProvider('getServers')]

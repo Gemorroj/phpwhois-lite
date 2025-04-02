@@ -52,27 +52,20 @@ final readonly class IpHandler implements HandlerInterface
         return new Data(
             $raw,
             $baseServer ?? $server,
-            $this->getIpType($query),
+            QueryTypeEnum::IP,
         );
-    }
-
-    private function getIpType(string $ip): QueryTypeEnum
-    {
-        if (\filter_var($ip, \FILTER_VALIDATE_IP, \FILTER_FLAG_IPV6)) {
-            return QueryTypeEnum::IPv6;
-        }
-
-        return QueryTypeEnum::IPv4;
     }
 
     private function prepareServerQuery(string $server, string $query): string
     {
+        $isCidr = \str_contains($query, '/');
+
         return match ($server) {
             'whois.ripe.net:43' => $query,
             'whois.apnic.net:43' => $query,
             'whois.lacnic.net:43' => $query,
             'whois.afrinic.net:43' => $query,
-            'whois.arin.net:43' => 'n '.$query,
+            'whois.arin.net:43' => $isCidr ? 'r = '.$query : 'z '.$query,
             default => $query,
         };
     }

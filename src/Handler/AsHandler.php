@@ -65,7 +65,7 @@ final readonly class AsHandler implements HandlerInterface
             'whois.apnic.net:43' => $query,
             'whois.lacnic.net:43' => $query,
             'whois.afrinic.net:43' => $query,
-            'whois.arin.net:43' => $hasAsPrefix ? 'a '.\substr($query, 2) : 'a '.$query,
+            'whois.arin.net:43' => $hasAsPrefix ? 'z '.\substr($query, 2) : 'z '.$query,
             default => $query,
         };
     }

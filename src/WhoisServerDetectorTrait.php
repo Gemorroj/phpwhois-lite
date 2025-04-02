@@ -30,7 +30,7 @@ trait WhoisServerDetectorTrait
         return null;
     }
 
-    protected function findServer(WhoisServerList $whoisServerList, string $query): ?string
+    protected function findServer(WhoisServerList $whoisServerList, string $query): string
     {
         $dp = \explode('.', $query);
         $np = \count($dp) - 1;
@@ -49,17 +49,7 @@ trait WhoisServerDetectorTrait
             }
         }
 
-        foreach ($tldTests as $tld) {
-            $cname = $tld.'.whois-servers.net';
-
-            if (\gethostbyname($cname) === $cname) {
-                continue;
-            }
-
-            return $tld.'.whois-servers.net';
-        }
-
-        return null;
+        return $whoisServerList->whoisServerDefault;
     }
 
     private function findRegistrarServer(string $raw): ?string

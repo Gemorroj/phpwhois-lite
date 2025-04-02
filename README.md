@@ -5,7 +5,9 @@
 [![Continuous Integration](https://github.com/Gemorroj/phpwhois-lite/workflows/Continuous%20Integration/badge.svg)](https://github.com/Gemorroj/phpwhois-lite/actions?query=workflow%3A%22Continuous+Integration%22)
 
 ### TODO:
+- https://habr.com/ru/articles/165869/
 - check the whois server list (parse https://www.iana.org/domains/root/db)
+- https://github.com/weppos/whois (research codebase, use server list)
 
 
 ### Features:
@@ -37,6 +39,8 @@ $cache = new FilesystemAdapter('phpwhois-lite', 60); // install symfony/cache
 $whoisClient = new WhoisClient(cache: $cache, logger: $logger);
 $whois = new Whois($whoisClient);
 // $data = $whois->process('127.0.0.1');
+// $data = $whois->process('192.168.0.0/24');
+// $data = $whois->process('2001:0db8:85a3:0000:0000:8a2e:0370:7334');
 // $data = $whois->process('AS220');
 // $data = $whois->process('sirus.su', 'whois.tcinet.ru'); // custom whois server
 $data = $whois->process('vk.com');

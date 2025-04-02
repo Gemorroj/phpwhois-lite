@@ -9,6 +9,30 @@ use PHPWhoisLite\Tests\BaseTestCase;
 
 final class DomainHandlerTest extends BaseTestCase
 {
+    public function testRu(): void
+    {
+        $whoisServerList = new WhoisServerList();
+        $handler = new DomainHandler($this->createLoggedClient(), $whoisServerList);
+        $data = $handler->process('ru');
+        // \file_put_contents('/test.txt', $data->raw);
+        // \var_dump($data);
+        self::assertStringContainsString('organisation: Coordination Center for TLD RU', $data->raw);
+        self::assertEquals($whoisServerList->whoisServerDefault, $data->server);
+        self::assertEquals(QueryTypeEnum::DOMAIN, $data->type);
+    }
+
+    public function testLocalhost(): void
+    {
+        $whoisServerList = new WhoisServerList();
+        $handler = new DomainHandler($this->createLoggedClient(), $whoisServerList);
+        $data = $handler->process('localhost');
+        // \file_put_contents('/test.txt', $data->raw);
+        // \var_dump($data);
+        self::assertStringContainsString('This query returned 0 objects.', $data->raw);
+        self::assertEquals($whoisServerList->whoisServerDefault, $data->server);
+        self::assertEquals(QueryTypeEnum::DOMAIN, $data->type);
+    }
+
     public function testVkCom(): void
     {
         $whoisServerList = new WhoisServerList();

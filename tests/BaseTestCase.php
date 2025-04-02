@@ -13,14 +13,18 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 abstract class BaseTestCase extends TestCase
 {
-    protected function createLoggedClient(): WhoisClient
+    protected function createLoggedClient(?int $cacheTime = null): WhoisClient
     {
         $input = new ArgvInput();
         $output = new ConsoleOutput(OutputInterface::VERBOSITY_DEBUG);
         $outputStyle = new SymfonyStyle($input, $output);
         $logger = new ConsoleLogger($outputStyle);
 
-        $cache = new FilesystemAdapter('phpwhois-lite', 60);
+        if (null === $cacheTime) {
+            return new WhoisClient(logger: $logger);
+        }
+
+        $cache = new FilesystemAdapter('phpwhois-lite', $cacheTime);
 
         return new WhoisClient(cache: $cache, logger: $logger);
     }

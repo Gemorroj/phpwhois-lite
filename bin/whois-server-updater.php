@@ -9,12 +9,14 @@ namespace PHPWhoisLite\Resource;
 
 final readonly class WhoisServerList
 {
+    public string $whoisServerDefault;
     /**
      * @var WhoisServer[] $whoisServers
      */
     public array $whoisServers;
     public function __construct()
     {
+        $this->whoisServerDefault = \'whois.iana.org:43\';
         $this->whoisServers = [];
     }
 }';

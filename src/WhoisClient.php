@@ -47,7 +47,7 @@ readonly class WhoisClient implements WhoisClientInterface
             $raw = $this->whoisRequest($server, $query);
         }
 
-        if (\str_contains($raw, 'Query rate limit exceeded')) {
+        if ($this->isQueryRateLimitExceeded($raw)) {
             throw QueryRateLimitExceededException::create($server);
         }
 
@@ -61,6 +61,34 @@ readonly class WhoisClient implements WhoisClientInterface
         }
 
         return $raw;
+    }
+
+    protected function isQueryRateLimitExceeded(string $raw): bool
+    {
+        $stings = [
+            'Query rate limit exceeded',
+            'You have exceeded this limit',
+            'Lookup quota exceeded',
+            'WHOIS LIMIT EXCEEDED',
+            'Excessive querying, grace period of',
+            'Query limitation is',
+            'exceeded allowed connection rate',
+            'too many requests',
+            'and will be replenished',
+            'contained within a list of IP addresses that may have failed',
+            'You exceeded the maximum',
+            'Maximum Daily connection limit reached',
+            'exceeded maximum connection limit',
+            'Still in grace period, wait',
+            'Query rate of ',
+        ];
+        foreach ($stings as $sting) {
+            if (\str_contains($raw, $sting)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     protected function convertToUtf8(string $raw): string

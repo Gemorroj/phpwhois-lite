@@ -6,8 +6,7 @@ namespace PHPWhoisLite;
 
 enum QueryTypeEnum: string
 {
-    case IPv4 = 'ipv4';
-    case IPv6 = 'ipv6';
+    case IP = 'ip';
     case AS = 'as';
     case DOMAIN = 'domain';
 }

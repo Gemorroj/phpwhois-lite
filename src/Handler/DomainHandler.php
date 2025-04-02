@@ -8,7 +8,6 @@ use Algo26\IdnaConvert\Exception\AlreadyPunycodeException;
 use Algo26\IdnaConvert\Exception\InvalidCharacterException as Algo26InvalidCharacterException;
 use Algo26\IdnaConvert\ToIdn;
 use PHPWhoisLite\Data;
-use PHPWhoisLite\Exception\DomainWhoisServerNotFoundException;
 use PHPWhoisLite\Exception\InvalidCharacterException;
 use PHPWhoisLite\Exception\InvalidWhoisServerException;
 use PHPWhoisLite\Exception\NetworkException;
@@ -30,7 +29,6 @@ final readonly class DomainHandler implements HandlerInterface
     }
 
     /**
-     * @throws DomainWhoisServerNotFoundException
      * @throws InvalidArgumentException
      * @throws InvalidCharacterException
      * @throws QueryRateLimitExceededException
@@ -52,9 +50,6 @@ final readonly class DomainHandler implements HandlerInterface
             $server = $this->prepareWhoisServer($forceWhoisServer);
         } else {
             $server = $this->findServer($this->whoisServerList, $query);
-            if (null === $server) {
-                throw DomainWhoisServerNotFoundException::create($query);
-            }
         }
 
         $raw = $this->whoisClient->getData($server, $query);

@@ -6,6 +6,7 @@ namespace PHPWhoisLite\Resource;
 
 final readonly class WhoisServerList
 {
+    public string $whoisServerDefault;
     /**
      * @var WhoisServer[]
      */
@@ -13,6 +14,7 @@ final readonly class WhoisServerList
 
     public function __construct()
     {
+        $this->whoisServerDefault = 'whois.iana.org:43';
         $this->whoisServers = [
             new WhoisServer('.abogado', 'whois-dub.mm-registry.com:43'),
             new WhoisServer('.ac', 'whois.nic.ac:43'),

@@ -16,7 +16,7 @@ final class IpHandlerTest extends BaseTestCase
         // var_dump($data->raw);
         self::assertStringContainsString('NetName:        SPECIAL-IPV4-LOOPBACK-IANA-RESERVED', $data->raw);
         self::assertEquals('whois.arin.net:43', $data->server); // default server
-        self::assertEquals(QueryTypeEnum::IPv4, $data->type);
+        self::assertEquals(QueryTypeEnum::IP, $data->type);
     }
 
     public function testPrivate(): void
@@ -27,7 +27,18 @@ final class IpHandlerTest extends BaseTestCase
         // var_dump($data->raw);
         self::assertStringContainsString('NetName:        PRIVATE-ADDRESS-CBLK-RFC1918-IANA-RESERVED', $data->raw);
         self::assertEquals('whois.arin.net:43', $data->server); // default server
-        self::assertEquals(QueryTypeEnum::IPv4, $data->type);
+        self::assertEquals(QueryTypeEnum::IP, $data->type);
+    }
+
+    public function testCidr(): void
+    {
+        $handler = new IpHandler($this->createLoggedClient());
+        $data = $handler->process('192.0.2.0/24');
+        // \file_put_contents('/test.txt', $data->raw);
+        // var_dump($data->raw);
+        self::assertStringContainsString('NetType:        IANA Special Use', $data->raw);
+        self::assertEquals('whois.arin.net:43', $data->server); // default server
+        self::assertEquals(QueryTypeEnum::IP, $data->type);
     }
 
     public function testApnicIpv4(): void
@@ -38,7 +49,7 @@ final class IpHandlerTest extends BaseTestCase
         // var_dump($data->raw);
         self::assertStringContainsString('inetnum:        1.1.1.0 - 1.1.1.255', $data->raw);
         self::assertEquals('whois.apnic.net:43', $data->server);
-        self::assertEquals(QueryTypeEnum::IPv4, $data->type);
+        self::assertEquals(QueryTypeEnum::IP, $data->type);
     }
 
     public function testArinIpv6(): void
@@ -49,7 +60,7 @@ final class IpHandlerTest extends BaseTestCase
         // var_dump($data->raw);
         self::assertStringContainsString('CIDR:           2001:4860::/32', $data->raw);
         self::assertEquals('whois.arin.net:43', $data->server);
-        self::assertEquals(QueryTypeEnum::IPv6, $data->type);
+        self::assertEquals(QueryTypeEnum::IP, $data->type);
     }
 
     public function testRipeIpv4(): void
@@ -60,7 +71,7 @@ final class IpHandlerTest extends BaseTestCase
         // var_dump($data->raw);
         self::assertStringContainsString('inetnum:        193.0.10.0 - 193.0.11.255', $data->raw);
         self::assertEquals('whois.ripe.net:43', $data->server);
-        self::assertEquals(QueryTypeEnum::IPv4, $data->type);
+        self::assertEquals(QueryTypeEnum::IP, $data->type);
     }
 
     public function testLacnicIpv4(): void
@@ -71,7 +82,7 @@ final class IpHandlerTest extends BaseTestCase
         // var_dump($data->raw);
         self::assertStringContainsString('aut-num:     AS28001', $data->raw);
         self::assertEquals('whois.lacnic.net:43', $data->server);
-        self::assertEquals(QueryTypeEnum::IPv4, $data->type);
+        self::assertEquals(QueryTypeEnum::IP, $data->type);
     }
 
     public function testAfrinic(): void
@@ -82,6 +93,6 @@ final class IpHandlerTest extends BaseTestCase
         // var_dump($data->raw);
         self::assertStringContainsString('inetnum:        196.216.2.0 - 196.216.3.255', $data->raw);
         self::assertEquals('whois.afrinic.net:43', $data->server);
-        self::assertEquals(QueryTypeEnum::IPv4, $data->type);
+        self::assertEquals(QueryTypeEnum::IP, $data->type);
     }
 }
