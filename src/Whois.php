@@ -8,18 +8,19 @@ use PHPWhoisLite\Exception\EmptyQueryException;
 use PHPWhoisLite\Handler\AsHandler;
 use PHPWhoisLite\Handler\DomainHandler;
 use PHPWhoisLite\Handler\IpHandler;
-use PHPWhoisLite\Resource\WhoisServerList;
+use PHPWhoisLite\Resource\Server;
+use PHPWhoisLite\Resource\ServerList;
 
 final readonly class Whois
 {
-    public function __construct(private ?WhoisClient $whoisClient = null, private ?WhoisServerList $whoisServerList = null)
+    public function __construct(private ?NetworkClient $networkClient = null, private ?ServerList $serverList = null)
     {
     }
 
     /**
      * @throws EmptyQueryException
      */
-    public function process(string $query, ?string $forceWhoisServer = null): Data
+    public function process(string $query, ?Server $forceWhoisServer = null): Data
     {
         return $this->createQueryHandler($query)->process($query, $forceWhoisServer);
     }
@@ -33,18 +34,18 @@ final readonly class Whois
             return throw new EmptyQueryException('The query is empty');
         }
 
-        $whoisClient = $this->whoisClient ?? new WhoisClient();
+        $networkClient = $this->networkClient ?? new NetworkClient();
 
         if ($this->isIp($query)) {
-            return new IpHandler($whoisClient);
+            return new IpHandler($networkClient);
         }
         if ($this->isAs($query)) {
-            return new AsHandler($whoisClient);
+            return new AsHandler($networkClient);
         }
 
-        $whoisServerList = $this->whoisServerList ?? new WhoisServerList();
+        $serverList = $this->serverList ?? new ServerList();
 
-        return new DomainHandler($whoisClient, $whoisServerList);
+        return new DomainHandler($networkClient, $serverList);
     }
 
     private function isAs(string $query): bool
@@ -63,7 +64,7 @@ final readonly class Whois
 
     private function isIp(string $query): bool
     {
-        if (\str_contains($query, '/')) {
+        if (\str_contains($query, '/')) { // check CIDR
             $parts = \explode('/', $query);
             if (2 !== \count($parts)) {
                 return false;

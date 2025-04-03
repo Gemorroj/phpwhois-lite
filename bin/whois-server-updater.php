@@ -1,71 +1,67 @@
 #!/usr/bin/env php
 <?php
 
+require_once __DIR__.'/whois-server-updater/_functions.php';
+
 $template = '<?php
 
 declare(strict_types=1);
 
 namespace PHPWhoisLite\Resource;
 
-final readonly class WhoisServerList
+final class ServerList
 {
-    public string $whoisServerDefault;
+    public Server $serverDefault;
     /**
-     * @var WhoisServer[] $whoisServers
+     * @var array<string, Server>
      */
-    public array $whoisServers;
+    public array $servers;
+
     public function __construct()
     {
-        $this->whoisServerDefault = \'whois.iana.org:43\';
-        $this->whoisServers = [];
+        $this->serverDefault = new Server(\'https://rdap.iana.org\', ServerTypeEnum::RDAP);
+        $this->servers = [];
     }
 }';
 
-$host = 'http://whoisservers.net';
-$port = 80;
-$writePath = __DIR__.'/../src/Resource/WhoisServerList.php';
-
+$writePath = __DIR__.'/../src/Resource/ServerList.php';
 $startTime = \microtime(true);
 
-echo 'Connect to '.$host.'...'.\PHP_EOL;
-$fp = \connect($host);
+$ianaServers = require __DIR__.'/whois-server-updater/_parser_iana.php';
+$webposServers = require __DIR__.'/whois-server-updater/_parser_webpos.php';
+$whoisserversServers = require __DIR__.'/whois-server-updater/_parser_whoisservers.php';
 
-echo 'Load main page...'.\PHP_EOL;
-$mainPage = \request($fp, $host.'/');
-
-$matches = [];
-\preg_match_all('/<h4><a href="(.+)">(.+)<\/a><\/h4>/', $mainPage, $matches, \PREG_SET_ORDER);
-
-echo 'Start scan domains...'.\PHP_EOL;
-$servers = [];
-foreach ($matches as $match) {
-    $tld = $match[2];
-    $urlPage = $match[1];
-
-    echo 'Load "'.$tld.'" domain page...'.\PHP_EOL;
-    $domainPage = \request($fp, $host.$urlPage);
-
-    $matchesPage = [];
-    \preg_match('/<tr><td>WHOIS Server: <\/td><td>(.+)<\/td><\/tr>/', $domainPage, $matchesPage);
-    $server = $matchesPage[1];
-
-    $server = \htmlspecialchars_decode($server);
-    if (!\str_starts_with($server, 'http://') && !\str_starts_with($server, 'https://')) {
-        // is whois server
-        if (!\str_contains($server, ':')) {
-            // default whois port
-            $server .= ':43';
-        }
+echo 'Use IANA servers as master repository.'.\PHP_EOL;
+$servers = $ianaServers;
+echo 'Prepare webpos servers...'.\PHP_EOL;
+foreach ($webposServers as $tld => $value) {
+    if (!isset($servers[$tld])) {
+        echo 'Add webpos '.\strtoupper($value['type']).' server '.$value['server'].' for '.$tld.\PHP_EOL;
+        $servers[$tld] = $value;
     }
-
-    $servers[] = \sprintf("new WhoisServer('%s', '%s'),", $tld, $server);
 }
-\disconnect($fp);
-echo 'End scan domains.'.\PHP_EOL;
-echo \PHP_EOL;
+echo 'Prepare whoisservers servers...'.\PHP_EOL;
+foreach ($whoisserversServers as $tld => $value) {
+    if (!isset($servers[$tld])) {
+        echo 'Add whoisservers '.\strtoupper($value['type']).' server '.$value['server'].' for '.$tld.\PHP_EOL;
+        $servers[$tld] = $value;
+    }
+}
 
-$serversStr = '$this->whoisServers = ['."\n".\implode("\n", $servers)."\n];";
-$template = \str_replace('$this->whoisServers = [];', $serversStr, $template);
+$servers = \cleanupServers($servers);
+
+$templatedServers = [];
+foreach ($servers as $tld => $value) {
+    $type = match ($value['type']) {
+        'whois' => 'ServerTypeEnum::WHOIS',
+        'rdap' => 'ServerTypeEnum::RDAP',
+    };
+
+    $templatedServers[] = \sprintf("'%s' => new Server('%s', %s),", $tld, $value['server'], $type);
+}
+
+$templatedServersStr = '$this->servers = ['."\n".\implode("\n", $templatedServers)."\n];";
+$template = \str_replace('$this->servers = [];', $templatedServersStr, $template);
 
 $write = \file_put_contents($writePath, $template);
 if (false === $write) {
@@ -78,31 +74,3 @@ $time = \round($endTime - $startTime, 2).' seconds';
 echo 'WHOIS servers updated.'.\PHP_EOL;
 echo 'Spent time: '.$time.\PHP_EOL;
 echo 'Don\'t forget run php-cs-fixer'.\PHP_EOL;
-
-function connect(string $url): CurlHandle
-{
-    $fp = \curl_init($url);
-    \curl_setopt($fp, \CURLOPT_ENCODING, '');
-    \curl_setopt($fp, \CURLOPT_RETURNTRANSFER, true);
-    \curl_setopt($fp, \CURLOPT_HTTPHEADER, [
-        'Connection: Keep-Alive',
-    ]);
-
-    return $fp;
-}
-
-function request(CurlHandle $fp, string $url): string
-{
-    \curl_setopt($fp, \CURLOPT_URL, $url);
-    $result = \curl_exec($fp);
-    if (false === $result) {
-        throw new RuntimeException(\curl_error($fp));
-    }
-
-    return $result;
-}
-
-function disconnect(CurlHandle $fp): void
-{
-    \curl_close($fp);
-}

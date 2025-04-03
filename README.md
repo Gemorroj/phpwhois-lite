@@ -5,16 +5,16 @@
 [![Continuous Integration](https://github.com/Gemorroj/phpwhois-lite/workflows/Continuous%20Integration/badge.svg)](https://github.com/Gemorroj/phpwhois-lite/actions?query=workflow%3A%22Continuous+Integration%22)
 
 ### TODO:
+- add more tests after reworked
+- https://github.com/weppos/whois (research codebase, use server list). attention on IP codebase (make own list of ip<->server)
 - https://habr.com/ru/articles/165869/
-- check the whois server list (parse https://www.iana.org/domains/root/db)
-- https://github.com/weppos/whois (research codebase, use server list)
 
 
 ### Features:
-- WHOIS info for domains, IPv4/IPv6, AS
+- WHOIS/RDAP info for domains, IPv4/IPv6, CIDR, AS
 - Support national domains (президент.рф for example)
-- Follow to registrar WHOIS servers (whois.crsnic.net -> whois.nic.ru for example)
-- Force custom WHOIS server
+- Follow to registrar WHOIS/RDAP servers (whois.crsnic.net -> whois.nic.ru for example)
+- Force custom WHOIS/RDAP server
 
 ### Requirements:
 - PHP >= 8.2
@@ -26,23 +26,28 @@ composer require gemorroj/phpwhois-lite
 ```
 
 ### Example:
+
 ```php
 <?php
 use PHPWhoisLite\Whois;
-use PHPWhoisLite\WhoisClient;
+use PHPWhoisLite\NetworkClient;
+use PHPWhoisLite\Resource\Server;
+use PHPWhoisLite\Resource\ServerTypeEnum;
 use Psr\Log\NullLogger;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 
 $logger = new NullLogger();
 $cache = new FilesystemAdapter('phpwhois-lite', 60); // install symfony/cache
 
-$whoisClient = new WhoisClient(cache: $cache, logger: $logger);
-$whois = new Whois($whoisClient);
+$networkClient = new NetworkClient(cache: $cache, logger: $logger);
+$whois = new Whois($networkClient);
+// $data = $whois->process('ru');
 // $data = $whois->process('127.0.0.1');
-// $data = $whois->process('192.168.0.0/24');
+// $data = $whois->process('192.168.0.0/24'); // CIDR
 // $data = $whois->process('2001:0db8:85a3:0000:0000:8a2e:0370:7334');
 // $data = $whois->process('AS220');
-// $data = $whois->process('sirus.su', 'whois.tcinet.ru'); // custom whois server
+// $data = $whois->process('sirus.su', WhoisServer('whois.tcinet.ru', ServerTypeEnum::WHOIS)); // custom WHOIS server
+// $data = $whois->process('sirus.su', WhoisServer('https://www.nic.ru/rdap', ServerTypeEnum::RDAP)); // custom RDAP server
 $data = $whois->process('vk.com');
 
 print_r($data);

@@ -9,22 +9,23 @@ use Algo26\IdnaConvert\Exception\InvalidCharacterException as Algo26InvalidChara
 use Algo26\IdnaConvert\ToIdn;
 use PHPWhoisLite\Data;
 use PHPWhoisLite\Exception\InvalidCharacterException;
-use PHPWhoisLite\Exception\InvalidWhoisServerException;
 use PHPWhoisLite\Exception\NetworkException;
 use PHPWhoisLite\Exception\QueryRateLimitExceededException;
 use PHPWhoisLite\Exception\TimeoutException;
 use PHPWhoisLite\HandlerInterface;
+use PHPWhoisLite\NetworkClient;
 use PHPWhoisLite\QueryTypeEnum;
-use PHPWhoisLite\Resource\WhoisServerList;
-use PHPWhoisLite\WhoisClient;
-use PHPWhoisLite\WhoisServerDetectorTrait;
+use PHPWhoisLite\Resource\Server;
+use PHPWhoisLite\Resource\ServerList;
+use PHPWhoisLite\Resource\ServerTypeEnum;
+use PHPWhoisLite\ServerDetectorTrait;
 use Psr\Cache\InvalidArgumentException;
 
 final readonly class DomainHandler implements HandlerInterface
 {
-    use WhoisServerDetectorTrait;
+    use ServerDetectorTrait;
 
-    public function __construct(private WhoisClient $whoisClient, private WhoisServerList $whoisServerList = new WhoisServerList())
+    public function __construct(private NetworkClient $networkClient, private ServerList $serverList = new ServerList())
     {
     }
 
@@ -34,9 +35,9 @@ final readonly class DomainHandler implements HandlerInterface
      * @throws QueryRateLimitExceededException
      * @throws TimeoutException
      * @throws NetworkException
-     * @throws InvalidWhoisServerException
+     * @throws \JsonException
      */
-    public function process(string $query, ?string $forceWhoisServer = null): Data
+    public function process(string $query, ?Server $forceServer = null): Data
     {
         try {
             $query = (new ToIdn())->convert($query);
@@ -46,25 +47,32 @@ final readonly class DomainHandler implements HandlerInterface
             throw new InvalidCharacterException('Invalid query: '.$query, previous: $e);
         }
 
-        if (null !== $forceWhoisServer) {
-            $server = $this->prepareWhoisServer($forceWhoisServer);
-        } else {
-            $server = $this->findServer($this->whoisServerList, $query);
-        }
+        $server = $forceServer ?? $this->findServer($this->serverList, $query);
 
-        $raw = $this->whoisClient->getData($server, $query);
+        $q = $this->prepareServerQuery($server, $query);
+        $response = $this->networkClient->getResponse($server, $q);
 
-        if (!$forceWhoisServer) {
-            $registrarServer = $this->findRegistrarServer($raw);
-            if ($registrarServer && $registrarServer !== $server) {
-                $raw = $this->whoisClient->getData($registrarServer, $query);
+        if (!$forceServer) {
+            $registrarServer = $this->findRegistrarServer($response);
+            if ($registrarServer && !$registrarServer->isEqual($server)) {
+                $q = $this->prepareServerQuery($registrarServer, $query);
+                $response = $this->networkClient->getResponse($registrarServer, $q);
             }
         }
 
         return new Data(
-            $raw,
+            $response,
             $registrarServer ?? $server,
             QueryTypeEnum::DOMAIN,
         );
+    }
+
+    private function prepareServerQuery(Server $server, string $query): string
+    {
+        if (ServerTypeEnum::RDAP === $server->type) {
+            return '/domain/'.$query;
+        }
+
+        return $query;
     }
 }
