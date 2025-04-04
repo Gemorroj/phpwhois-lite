@@ -49,7 +49,7 @@ final class IpHandlerTest extends BaseTestCase
         yield ['1.1.1.1', '"handle": "IRT-APNICRANDNET-AU"', 'https://rdap.apnic.net/'];
         yield ['2001:4860:4860::8888', '"handle": "NET6-2001-4860-1"', 'https://rdap.arin.net/registry/'];
         yield ['193.0.11.51', '"parentHandle": "193.0.0.0 - 193.0.23.255"', 'https://rdap.db.ripe.net/'];
-        yield ['200.3.13.10', '???', 'https://rdap.lacnic.net/rdap/']; // todo
+        yield ['200.3.13.10', '"handle": "UY-LACN-LACNIC"', 'https://rdap.lacnic.net/rdap/'];
         yield ['196.216.2.1', '"handle": "196.216.2.0 - 196.216.3.255"', 'https://rdap.afrinic.net/rdap/'];
         yield ['199.71.0.46', 'NetRange:       199.71.0.0 - 199.71.0.255', 'whois.arin.net'];
     }

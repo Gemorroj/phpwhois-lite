@@ -47,7 +47,7 @@ final class AsnHandlerTest extends BaseTestCase
         yield ['AS4837', '"handle": "AS4837"', 'https://rdap.apnic.net/'];
         yield ['220', '"handle": "AS220"', 'https://rdap.arin.net/registry/'];
         yield ['AS2043', '"handle": "KPN-RIPE"', 'https://rdap.db.ripe.net/'];
-        yield ['AS28001', '???', 'https://rdap.lacnic.net/rdap/']; // todo
+        yield ['AS28001', '"handle": "UY-LACN-LACNIC"', 'https://rdap.lacnic.net/rdap/'];
         yield ['36864', '"handle": "AS36864"', 'https://rdap.afrinic.net/rdap/'];
         yield ['3333', 'ASNumber:       3154 - 3353', 'whois.arin.net'];
     }
