@@ -26,6 +26,7 @@ composer require gemorroj/whordap
 use WhoRdap\NetworkClient\NetworkClient;
 use WhoRdap\WhoRdap;
 use WhoRdap\Response\DomainRegistrarResponse;
+use WhoRdap\Response\DomainResponse;
 use Psr\Log\NullLogger;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 
@@ -42,7 +43,7 @@ $whois = new WhoRdap($networkClient);
 // $data = $whois->process('sirus.su', WhoisServer('whois.tcinet.ru', ServerTypeEnum::WHOIS)); // custom WHOIS server
 // $data = $whois->process('sirus.su', WhoisServer('https://www.nic.ru/rdap', ServerTypeEnum::RDAP)); // custom RDAP server
 $data = $whois->process('vk.com');
-$actualResponse = $data->registrarResponse instanceof DomainRegistrarResponse ? $data->registrarResponse : $data;
+$actualResponse = $data instanceof DomainResponse && $data->registrarResponse instanceof DomainRegistrarResponse ? $data->registrarResponse : $data;
 // echo $actualResponse->getResponseAsString();
 
 print_r($data);
