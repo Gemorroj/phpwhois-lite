@@ -8,6 +8,7 @@
 - add more tests after reworked
 - https://github.com/weppos/whois (research codebase, use server list). attention on IP codebase (make own list of ip<->server)
 - https://habr.com/ru/articles/165869/
+- research https://lookup.icann.org/ru/lookup. 1 request to https://data.iana.org/rdap/dns.json, 2 request to rdap server
 
 
 ### Features:
