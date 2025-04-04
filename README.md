@@ -46,9 +46,9 @@ $actualResponse = $data->registrarResponse instanceof DomainRegistrarResponse ? 
 
 print_r($data);
 /*
-PHPWhoisLite\Response\DomainResponse Object
+WhoRdap\Response\DomainResponse Object
 (
-    [response] => PHPWhoisLite\NetworkClient\WhoisResponse Object
+    [response] => WhoRdap\NetworkClient\WhoisResponse Object
         (
             [data] => Domain Name: VK.COM
    Registry Domain ID: 3206186_DOMAIN_COM-VRSN
@@ -56,10 +56,10 @@ PHPWhoisLite\Response\DomainResponse Object
 ...
         )
 
-    [server] => PHPWhoisLite\Resource\Server Object
+    [server] => WhoRdap\Resource\Server Object
         (
             [server] => whois.verisign-grs.com
-            [type] => PHPWhoisLite\Resource\ServerTypeEnum Enum:string
+            [type] => WhoRdap\Resource\ServerTypeEnum Enum:string
                 (
                     [name] => WHOIS
                     [value] => whois
@@ -67,9 +67,9 @@ PHPWhoisLite\Response\DomainResponse Object
 
         )
 
-    [registrarResponse] => PHPWhoisLite\Response\DomainRegistrarResponse Object
+    [registrarResponse] => WhoRdap\Response\DomainRegistrarResponse Object
         (
-            [response] => PHPWhoisLite\NetworkClient\WhoisResponse Object
+            [response] => WhoRdap\NetworkClient\WhoisResponse Object
                 (
                     [data] => Domain Name: VK.COM
 Registry Domain ID: 3206186_DOMAIN_COM-VRSN
@@ -77,10 +77,10 @@ Registrar WHOIS Server: whois.nic.ru
 ...
                 )
 
-            [server] => PHPWhoisLite\Resource\Server Object
+            [server] => WhoRdap\Resource\Server Object
                 (
                     [server] => whois.nic.ru
-                    [type] => PHPWhoisLite\Resource\ServerTypeEnum Enum:string
+                    [type] => WhoRdap\Resource\ServerTypeEnum Enum:string
                         (
                             [name] => WHOIS
                             [value] => whois
