@@ -3,7 +3,7 @@
 namespace PHPWhoisLite\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPWhoisLite\Handler\AsHandler;
+use PHPWhoisLite\Handler\AsnHandler;
 use PHPWhoisLite\Handler\DomainHandler;
 use PHPWhoisLite\Handler\IpHandler;
 use PHPWhoisLite\Whois;
@@ -30,8 +30,8 @@ final class WhoisTest extends BaseTestCase
         yield ['192.168.0.1', IpHandler::class];
         yield ['192.168.0.0/24', IpHandler::class];
         yield ['1.1.1.1', IpHandler::class];
-        yield ['AS220', AsHandler::class];
-        yield ['12345', AsHandler::class];
+        yield ['AS220', AsnHandler::class];
+        yield ['12345', AsnHandler::class];
         yield ['ya.ru', DomainHandler::class];
         yield ['президент.рф', DomainHandler::class];
         yield ['.рф', DomainHandler::class];

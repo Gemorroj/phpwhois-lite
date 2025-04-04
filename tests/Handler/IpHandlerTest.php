@@ -2,88 +2,74 @@
 
 namespace PHPWhoisLite\Tests\Handler;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPWhoisLite\Handler\IpHandler;
+use PHPWhoisLite\Resource\IpServerList;
+use PHPWhoisLite\Resource\Server;
+use PHPWhoisLite\Resource\ServerTypeEnum;
 use PHPWhoisLite\Tests\BaseTestCase;
 
 final class IpHandlerTest extends BaseTestCase
 {
-    public function testReserved(): void
+    #[DataProvider('getIps')]
+    public function testFindIpServer(string $query, ?Server $server): void
     {
-        $handler = new IpHandler($this->createLoggedClient());
-        $data = $handler->process('127.0.0.1');
-        // \file_put_contents('/test.txt', $data->getResponseAsString());
-        // var_dump($data->getResponseAsString());
-        self::assertStringContainsString('NetName:        SPECIAL-IPV4-LOOPBACK-IANA-RESERVED', $data->getResponseAsString());
-        self::assertEquals('whois.arin.net', $data->server->server); // default server
+        $handler = new IpHandler($this->createLoggedClient(), self::createIpServerList());
+        $reflectionObject = new \ReflectionObject($handler);
+        $reflectionMethod = $reflectionObject->getMethod('findIpServer');
+        $result = $reflectionMethod->invoke($handler, $query);
+
+        self::assertEquals($server, $result);
     }
 
-    public function testPrivate(): void
+    public static function getIps(): \Generator
     {
-        $handler = new IpHandler($this->createLoggedClient());
-        $data = $handler->process('192.168.0.1');
-        // \file_put_contents('/test.txt', $data->getResponseAsString());
-        // var_dump($data->getResponseAsString());
-        self::assertStringContainsString('NetName:        PRIVATE-ADDRESS-CBLK-RFC1918-IANA-RESERVED', $data->getResponseAsString());
-        self::assertEquals('whois.arin.net', $data->server->server); // default server
+        yield ['1.1.1.1/8', new Server('https://rdap.apnic.net/', ServerTypeEnum::RDAP)];
+        yield ['1.1.1.1', new Server('https://rdap.apnic.net/', ServerTypeEnum::RDAP)];
+        yield ['2a00:1450:4011:808::1001', new Server('https://rdap.db.ripe.net/', ServerTypeEnum::RDAP)];
+        yield ['2.2.2.2', self::createIpServerList()->serverDefault];
     }
 
-    public function testCidr(): void
+    #[DataProvider('getIpResponse')]
+    public function testProcess(string $query, string $expectedString, string $expectedServer): void
     {
-        $handler = new IpHandler($this->createLoggedClient());
-        $data = $handler->process('192.0.2.0/24');
+        $handler = new IpHandler($this->createLoggedClient(), self::createIpServerList());
+        $data = $handler->process($query);
         // \file_put_contents('/test.txt', $data->getResponseAsString());
         // var_dump($data->getResponseAsString());
-        self::assertStringContainsString('NetType:        IANA Special Use', $data->getResponseAsString());
-        self::assertEquals('whois.arin.net', $data->server->server); // default server
+        self::assertStringContainsString($expectedString, $data->getResponseAsString());
+        self::assertEquals($expectedServer, $data->server->server);
     }
 
-    public function testApnicIpv4(): void
+    public static function getIpResponse(): \Generator
     {
-        $handler = new IpHandler($this->createLoggedClient());
-        $data = $handler->process('1.1.1.1');
-        // \file_put_contents('/test.txt', $data->getResponseAsString());
-        // var_dump($data->getResponseAsString());
-        self::assertStringContainsString('inetnum:        1.1.1.0 - 1.1.1.255', $data->getResponseAsString());
-        self::assertEquals('whois.apnic.net', $data->server->server);
+        yield ['127.0.0.1', '"name": "SPECIAL-IPV4-LOOPBACK-IANA-RESERVED"', self::createIpServerList()->serverDefault->server];
+        yield ['192.168.0.1', '"name": "PRIVATE-ADDRESS-CBLK-RFC1918-IANA-RESERVED"', self::createIpServerList()->serverDefault->server];
+        yield ['192.0.2.0/24', '"handle": "IANA-IP-ARIN"', self::createIpServerList()->serverDefault->server];
+        yield ['1.1.1.1', '"handle": "IRT-APNICRANDNET-AU"', 'https://rdap.apnic.net/'];
+        yield ['2001:4860:4860::8888', '"handle": "NET6-2001-4860-1"', 'https://rdap.arin.net/registry/'];
+        yield ['193.0.11.51', '"parentHandle": "193.0.0.0 - 193.0.23.255"', 'https://rdap.db.ripe.net/'];
+        yield ['200.3.13.10', '???', 'https://rdap.lacnic.net/rdap/']; // todo
+        yield ['196.216.2.1', '"handle": "196.216.2.0 - 196.216.3.255"', 'https://rdap.afrinic.net/rdap/'];
+        yield ['199.71.0.46', 'NetRange:       199.71.0.0 - 199.71.0.255', 'whois.arin.net'];
     }
 
-    public function testArinIpv6(): void
+    private static function createIpServerList(): IpServerList
     {
-        $handler = new IpHandler($this->createLoggedClient());
-        $data = $handler->process('2001:4860:4860::8888');
-        // \file_put_contents('/test.txt', $data->getResponseAsString());
-        // var_dump($data->getResponseAsString());
-        self::assertStringContainsString('CIDR:           2001:4860::/32', $data->getResponseAsString());
-        self::assertEquals('whois.arin.net', $data->server->server);
-    }
+        $serverList = new IpServerList();
+        $serverList->serverDefault = new Server('https://rdap.arin.net/registry', ServerTypeEnum::RDAP);
+        $serverList->serversIpv4 = [
+            '199.71.0.46' => new Server('whois.arin.net', ServerTypeEnum::WHOIS),
+            '1.0.0.0/8' => new Server('https://rdap.apnic.net/', ServerTypeEnum::RDAP),
+            '193.0.0.0/8' => new Server('https://rdap.db.ripe.net/', ServerTypeEnum::RDAP),
+            '200.0.0.0/8' => new Server('https://rdap.lacnic.net/rdap/', ServerTypeEnum::RDAP),
+            '196.0.0.0/8' => new Server('https://rdap.afrinic.net/rdap/', ServerTypeEnum::RDAP),
+        ];
+        $serverList->serversIpv6 = [
+            '2a00::/12' => new Server('https://rdap.db.ripe.net/', ServerTypeEnum::RDAP),
+            '2001:4800::/23' => new Server('https://rdap.arin.net/registry/', ServerTypeEnum::RDAP),
+        ];
 
-    public function testRipeIpv4(): void
-    {
-        $handler = new IpHandler($this->createLoggedClient());
-        $data = $handler->process('193.0.11.51');
-        // \file_put_contents('/test.txt', $data->getResponseAsString());
-        // var_dump($data->getResponseAsString());
-        self::assertStringContainsString('inetnum:        193.0.10.0 - 193.0.11.255', $data->getResponseAsString());
-        self::assertEquals('whois.ripe.net', $data->server->server);
-    }
-
-    public function testLacnicIpv4(): void
-    {
-        $handler = new IpHandler($this->createLoggedClient());
-        $data = $handler->process('200.3.13.10');
-        // \file_put_contents('/test.txt', $data->getResponseAsString());
-        // var_dump($data->getResponseAsString());
-        self::assertStringContainsString('aut-num:     AS28001', $data->getResponseAsString());
-        self::assertEquals('whois.lacnic.net', $data->server->server);
-    }
-
-    public function testAfrinic(): void
-    {
-        $handler = new IpHandler($this->createLoggedClient());
-        $data = $handler->process('196.216.2.1');
-        // \file_put_contents('/test.txt', $data->getResponseAsString());
-        // var_dump($data->getResponseAsString());
-        self::assertStringContainsString('inetnum:        196.216.2.0 - 196.216.3.255', $data->getResponseAsString());
-        self::assertEquals('whois.afrinic.net', $data->server->server);
+        return $serverList;
     }
 }

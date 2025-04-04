@@ -8,7 +8,7 @@ use PHPWhoisLite\NetworkClient\RdapResponse;
 use PHPWhoisLite\NetworkClient\WhoisResponse;
 use PHPWhoisLite\Resource\Server;
 
-final readonly class AsResponse
+final readonly class AsnResponse
 {
     public function __construct(
         public RdapResponse|WhoisResponse $response,
@@ -22,7 +22,7 @@ final readonly class AsResponse
     public function getResponseAsString(): string
     {
         if ($this->response instanceof RdapResponse) {
-            return \json_encode($this->response->data, \JSON_THROW_ON_ERROR);
+            return \json_encode($this->response->data, \JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT);
         }
 
         return $this->response->data;

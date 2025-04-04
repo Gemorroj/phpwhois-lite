@@ -14,9 +14,7 @@ final readonly class DomainResponse
     public function __construct(
         public RdapResponse|WhoisResponse $response,
         public Server $server,
-        public RdapResponse|WhoisResponse|null $registrarResponse = null,
-        public ?Server $registrarServer = null,
-        public ?RegistrarServerException $registrarServerException = null,
+        public DomainRegistrarResponse|RegistrarServerException|null $registrarResponse = null,
     ) {
     }
 
@@ -25,15 +23,8 @@ final readonly class DomainResponse
      */
     public function getResponseAsString(): string
     {
-        if ($this->registrarResponse instanceof RdapResponse) {
-            return \json_encode($this->registrarResponse->data, \JSON_THROW_ON_ERROR);
-        }
-        if ($this->registrarResponse instanceof WhoisResponse) {
-            return $this->registrarResponse->data;
-        }
-
         if ($this->response instanceof RdapResponse) {
-            return \json_encode($this->response->data, \JSON_THROW_ON_ERROR);
+            return \json_encode($this->response->data, \JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT);
         }
 
         return $this->response->data;

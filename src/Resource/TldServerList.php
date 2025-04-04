@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace PHPWhoisLite\Resource;
 
-final class ServerList
+final class TldServerList
 {
     public Server $serverDefault;
     /**

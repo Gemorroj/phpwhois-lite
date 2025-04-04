@@ -5,28 +5,34 @@ declare(strict_types=1);
 namespace PHPWhoisLite;
 
 use PHPWhoisLite\Exception\EmptyQueryException;
-use PHPWhoisLite\Handler\AsHandler;
+use PHPWhoisLite\Handler\AsnHandler;
 use PHPWhoisLite\Handler\DomainHandler;
 use PHPWhoisLite\Handler\IpHandler;
 use PHPWhoisLite\NetworkClient\NetworkClient;
+use PHPWhoisLite\Resource\AsnServerList;
+use PHPWhoisLite\Resource\IpServerList;
 use PHPWhoisLite\Resource\Server;
-use PHPWhoisLite\Resource\ServerList;
-use PHPWhoisLite\Response\AsResponse;
+use PHPWhoisLite\Resource\TldServerList;
+use PHPWhoisLite\Response\AsnResponse;
 use PHPWhoisLite\Response\DomainResponse;
 use PHPWhoisLite\Response\IpResponse;
 
 final readonly class Whois
 {
-    public function __construct(private ?NetworkClient $networkClient = null, private ?ServerList $serverList = null)
-    {
+    public function __construct(
+        private ?NetworkClient $networkClient = null,
+        private ?TldServerList $tldServerList = null,
+        private ?AsnServerList $asnServerList = null,
+        private ?IpServerList $ipServerList = null,
+    ) {
     }
 
     /**
      * @throws EmptyQueryException
      */
-    public function process(string $query, ?Server $forceWhoisServer = null): IpResponse|AsResponse|DomainResponse
+    public function process(string $query, ?Server $forceServer = null): IpResponse|AsnResponse|DomainResponse
     {
-        return $this->createQueryHandler($query)->process($query, $forceWhoisServer);
+        return $this->createQueryHandler($query)->process($query, $forceServer);
     }
 
     /**
@@ -41,18 +47,22 @@ final readonly class Whois
         $networkClient = $this->networkClient ?? new NetworkClient();
 
         if ($this->isIp($query)) {
-            return new IpHandler($networkClient);
+            $ipServerList = $this->ipServerList ?? new IpServerList();
+
+            return new IpHandler($networkClient, $ipServerList);
         }
-        if ($this->isAs($query)) {
-            return new AsHandler($networkClient);
+        if ($this->isAsn($query)) {
+            $asnServerList = $this->asnServerList ?? new AsnServerList();
+
+            return new AsnHandler($networkClient, $asnServerList);
         }
 
-        $serverList = $this->serverList ?? new ServerList();
+        $tldServerList = $this->tldServerList ?? new TldServerList();
 
-        return new DomainHandler($networkClient, $serverList);
+        return new DomainHandler($networkClient, $tldServerList);
     }
 
-    private function isAs(string $query): bool
+    private function isAsn(string $query): bool
     {
         $hasAsPrefix = false !== \stripos($query, 'AS');
         if ($hasAsPrefix) {

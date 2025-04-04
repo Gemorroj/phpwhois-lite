@@ -8,7 +8,7 @@ use PHPWhoisLite\NetworkClient\RdapResponse;
 use PHPWhoisLite\NetworkClient\WhoisResponse;
 use PHPWhoisLite\Resource\Server;
 
-final readonly class IpResponse
+final readonly class DomainRegistrarResponse
 {
     public function __construct(
         public RdapResponse|WhoisResponse $response,

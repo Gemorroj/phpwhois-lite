@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PHPWhoisLite\NetworkClient;
 
+use PHPWhoisLite\Exception\HttpException;
 use PHPWhoisLite\Exception\NetworkException;
 use PHPWhoisLite\Exception\QueryRateLimitExceededException;
 use PHPWhoisLite\Exception\TimeoutException;
@@ -119,7 +120,7 @@ readonly class NetworkClient implements NetworkClientInterface
         }
         \curl_setopt($fp, \CURLOPT_ENCODING, '');
         \curl_setopt($fp, \CURLOPT_RETURNTRANSFER, true);
-        \curl_setopt($fp, \CURLOPT_FOLLOWLOCATION, true); // http -> https
+        \curl_setopt($fp, \CURLOPT_FOLLOWLOCATION, true); // http -> https or redirect to actual server
         \curl_setopt($fp, \CURLOPT_TIMEOUT, $this->timeout);
         \curl_setopt($fp, \CURLOPT_BUFFERSIZE, $this->buffer);
         \curl_setopt($fp, \CURLOPT_HTTPHEADER, [
@@ -140,7 +141,7 @@ readonly class NetworkClient implements NetworkClientInterface
 
         $httpCode = \curl_getinfo($fp, \CURLINFO_HTTP_CODE);
         if ($httpCode >= 400) {
-            throw new NetworkException('HTTP Error: '.$httpCode);
+            throw HttpException::create($httpCode, $raw);
         }
 
         $json = \json_decode($raw, true, 512, \JSON_THROW_ON_ERROR);

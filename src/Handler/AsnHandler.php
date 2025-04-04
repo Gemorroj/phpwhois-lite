@@ -9,17 +9,15 @@ use PHPWhoisLite\Exception\QueryRateLimitExceededException;
 use PHPWhoisLite\Exception\TimeoutException;
 use PHPWhoisLite\HandlerInterface;
 use PHPWhoisLite\NetworkClient\NetworkClient;
+use PHPWhoisLite\Resource\AsnServerList;
 use PHPWhoisLite\Resource\Server;
 use PHPWhoisLite\Resource\ServerTypeEnum;
-use PHPWhoisLite\Response\AsResponse;
-use PHPWhoisLite\ServerDetectorTrait;
+use PHPWhoisLite\Response\AsnResponse;
 use Psr\Cache\InvalidArgumentException;
 
-final readonly class AsHandler implements HandlerInterface
+final readonly class AsnHandler implements HandlerInterface
 {
-    use ServerDetectorTrait;
-
-    public function __construct(private NetworkClient $networkClient, private Server $defaultServer = new Server('whois.arin.net:43', ServerTypeEnum::WHOIS))
+    public function __construct(private NetworkClient $networkClient, private AsnServerList $serverList = new AsnServerList())
     {
     }
 
@@ -30,26 +28,38 @@ final readonly class AsHandler implements HandlerInterface
      * @throws NetworkException
      * @throws \JsonException
      */
-    public function process(string $query, ?Server $forceServer = null): AsResponse
+    public function process(string $query, ?Server $forceServer = null): AsnResponse
     {
-        $server = $forceServer ?? $this->defaultServer;
+        $server = $forceServer ?? $this->findAsnServer($query);
 
         $q = $this->prepareServerQuery($server, $query);
         $response = $this->networkClient->getResponse($server, $q);
 
-        // todo: always use hardcoded servers by ICANN list. add it to ServerList
-        if (!$forceServer) {
-            $baseServer = $this->findBaseServer($response);
-            if ($baseServer && !$baseServer->isEqual($server)) {
-                $q = $this->prepareServerQuery($baseServer, $query);
-                $response = $this->networkClient->getResponse($baseServer, $q);
+        return new AsnResponse(
+            $response,
+            $server,
+        );
+    }
+
+    private function findAsnServer(string $query): Server
+    {
+        $hasAsPrefix = false !== \stripos($query, 'AS');
+        $number = $hasAsPrefix ? \substr($query, 2) : $query;
+        $number = (int) $number;
+
+        foreach ($this->serverList->servers as $range => $server) {
+            if (!\is_int($range) && \str_contains($range, '-')) {
+                [$fromRange, $toRange] = \explode('-', $range, 2);
+            } else {
+                $fromRange = $toRange = $range;
+            }
+
+            if ($number >= $fromRange && $number <= $toRange) {
+                return $server;
             }
         }
 
-        return new AsResponse(
-            $response,
-            $baseServer ?? $server,
-        );
+        return $this->serverList->serverDefault;
     }
 
     private function prepareServerQuery(Server $server, string $query): string

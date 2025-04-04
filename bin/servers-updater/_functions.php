@@ -39,7 +39,7 @@ function disconnect(CurlHandle $fp): void
  *
  * @return array<string, array{type: string, server: string}>
  */
-function cleanupServers(array $servers): array
+function cleanupTldServers(array $servers): array
 {
     foreach ($servers as $tld => $value) {
         if (\substr_count($tld, '.') > 1) {
