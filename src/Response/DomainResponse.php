@@ -24,7 +24,7 @@ final readonly class DomainResponse
     public function getResponseAsString(): string
     {
         if ($this->response instanceof RdapResponse) {
-            return \json_encode($this->response->data, \JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT);
+            return \json_encode($this->response->data, \JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT | \JSON_UNESCAPED_SLASHES);
         }
 
         return $this->response->data;
