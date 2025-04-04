@@ -3,11 +3,10 @@
 namespace PHPWhoisLite\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPWhoisLite\NetworkClient\RdapResponse;
+use PHPWhoisLite\NetworkClient\WhoisResponse;
 use PHPWhoisLite\Resource\Server;
-use PHPWhoisLite\Resource\ServerList;
 use PHPWhoisLite\Resource\ServerTypeEnum;
-use PHPWhoisLite\Response\RdapResponse;
-use PHPWhoisLite\Response\WhoisResponse;
 use PHPWhoisLite\ServerDetectorTrait;
 
 final class ServerDetectorTraitTest extends BaseTestCase
@@ -30,7 +29,7 @@ final class ServerDetectorTraitTest extends BaseTestCase
     #[DataProvider('getDomains')]
     public function testFindServer(string $query, ?Server $server): void
     {
-        $serverList = $this->createServerList();
+        $serverList = self::createServerList();
         $result = $this->findServer($serverList, $query);
         self::assertEquals($server, $result);
     }
@@ -41,7 +40,8 @@ final class ServerDetectorTraitTest extends BaseTestCase
         yield ['ya.ru', new Server('whois.tcinet.ru', ServerTypeEnum::WHOIS)];
         yield ['test.org.ru', new Server('whois.nic.ru', ServerTypeEnum::WHOIS)];
         yield ['test.tjmaxx', new Server('https://rdap.nic.tjmaxx/', ServerTypeEnum::RDAP)];
-        yield ['domain.unknowntld', (new ServerList())->serverDefault];
+        yield ['ru', self::createServerList()->serverDefault];
+        yield ['domain.unknowntld', self::createServerList()->serverDefault];
     }
 
     #[DataProvider('getRegistrarData')]

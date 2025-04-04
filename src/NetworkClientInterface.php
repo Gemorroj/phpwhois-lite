@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace PHPWhoisLite;
 
+use PHPWhoisLite\NetworkClient\RdapResponse;
+use PHPWhoisLite\NetworkClient\WhoisResponse;
 use PHPWhoisLite\Resource\Server;
-use PHPWhoisLite\Response\RdapResponse;
-use PHPWhoisLite\Response\WhoisResponse;
 
 interface NetworkClientInterface
 {

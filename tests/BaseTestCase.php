@@ -3,7 +3,7 @@
 namespace PHPWhoisLite\Tests;
 
 use PHPUnit\Framework\TestCase;
-use PHPWhoisLite\NetworkClient;
+use PHPWhoisLite\NetworkClient\NetworkClient;
 use PHPWhoisLite\Resource\Server;
 use PHPWhoisLite\Resource\ServerList;
 use PHPWhoisLite\Resource\ServerTypeEnum;
@@ -32,7 +32,7 @@ abstract class BaseTestCase extends TestCase
         return new NetworkClient(cache: $cache, logger: $logger);
     }
 
-    protected function createServerList(): ServerList
+    protected static function createServerList(): ServerList
     {
         $serverList = new ServerList();
         $serverList->serverDefault = new Server('https://rdap.iana.org', ServerTypeEnum::RDAP);

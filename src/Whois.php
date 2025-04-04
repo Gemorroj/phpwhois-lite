@@ -8,8 +8,12 @@ use PHPWhoisLite\Exception\EmptyQueryException;
 use PHPWhoisLite\Handler\AsHandler;
 use PHPWhoisLite\Handler\DomainHandler;
 use PHPWhoisLite\Handler\IpHandler;
+use PHPWhoisLite\NetworkClient\NetworkClient;
 use PHPWhoisLite\Resource\Server;
 use PHPWhoisLite\Resource\ServerList;
+use PHPWhoisLite\Response\AsResponse;
+use PHPWhoisLite\Response\DomainResponse;
+use PHPWhoisLite\Response\IpResponse;
 
 final readonly class Whois
 {
@@ -20,7 +24,7 @@ final readonly class Whois
     /**
      * @throws EmptyQueryException
      */
-    public function process(string $query, ?Server $forceWhoisServer = null): Data
+    public function process(string $query, ?Server $forceWhoisServer = null): IpResponse|AsResponse|DomainResponse
     {
         return $this->createQueryHandler($query)->process($query, $forceWhoisServer);
     }

@@ -8,7 +8,12 @@
 - add more tests after reworked
 - https://github.com/weppos/whois (research codebase, use server list). attention on IP codebase (make own list of ip<->server)
 - https://habr.com/ru/articles/165869/
-- research https://lookup.icann.org/ru/lookup. 1 request to https://data.iana.org/rdap/dns.json, 2 request to rdap server
+- research https://lookup.icann.org/ru/lookup:
+  - domain: 1 request to https://data.iana.org/rdap/dns.json, 2 request to rdap server, 3 request to registrar rdap server
+    - if registrar rdap server fails (vk.com for example), if shows notice and ifo from prev rdap server
+  - ipv4: 1 request https://data.iana.org/rdap/ipv4.json, 2 request to rdap server
+  - ipv6: 1 request https://data.iana.org/rdap/ipv6.json, 2 request to rdap server
+  - as: 1 request https://data.iana.org/rdap/asn.json, 2 request to rdap server
 
 
 ### Features:
@@ -30,12 +35,7 @@ composer require gemorroj/phpwhois-lite
 
 ```php
 <?php
-use PHPWhoisLite\Whois;
-use PHPWhoisLite\NetworkClient;
-use PHPWhoisLite\Resource\Server;
-use PHPWhoisLite\Resource\ServerTypeEnum;
-use Psr\Log\NullLogger;
-use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+use PHPWhoisLite\NetworkClient\NetworkClient;use PHPWhoisLite\Whois;use Psr\Log\NullLogger;use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 
 $logger = new NullLogger();
 $cache = new FilesystemAdapter('phpwhois-lite', 60); // install symfony/cache
@@ -52,20 +52,4 @@ $whois = new Whois($networkClient);
 $data = $whois->process('vk.com');
 
 print_r($data);
-/*
-PHPWhoisLite\Data Object
-(
-    [raw] => Domain Name: VK.COM
-Registry Domain ID: 3206186_DOMAIN_COM-VRSN
-...
-
-    [server] => whois.nic.ru:43
-    [type] => PHPWhoisLite\QueryTypeEnum Enum:string
-        (
-            [name] => DOMAIN
-            [value] => domain
-        )
-
-)
- */
 ```

@@ -2,15 +2,14 @@
 
 declare(strict_types=1);
 
-namespace PHPWhoisLite;
+namespace PHPWhoisLite\NetworkClient;
 
 use PHPWhoisLite\Exception\NetworkException;
 use PHPWhoisLite\Exception\QueryRateLimitExceededException;
 use PHPWhoisLite\Exception\TimeoutException;
+use PHPWhoisLite\NetworkClientInterface;
 use PHPWhoisLite\Resource\Server;
 use PHPWhoisLite\Resource\ServerTypeEnum;
-use PHPWhoisLite\Response\RdapResponse;
-use PHPWhoisLite\Response\WhoisResponse;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Cache\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
@@ -138,6 +137,11 @@ readonly class NetworkClient implements NetworkClientInterface
 
         \curl_close($fp);
         $this->logger?->debug('Close CURL connection');
+
+        $httpCode = \curl_getinfo($fp, \CURLINFO_HTTP_CODE);
+        if ($httpCode >= 400) {
+            throw new NetworkException('HTTP Error: '.$httpCode);
+        }
 
         $json = \json_decode($raw, true, 512, \JSON_THROW_ON_ERROR);
 

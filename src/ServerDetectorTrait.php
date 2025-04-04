@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace PHPWhoisLite;
 
 use PHPWhoisLite\Exception\InvalidWhoisServerException;
+use PHPWhoisLite\NetworkClient\RdapResponse;
+use PHPWhoisLite\NetworkClient\WhoisResponse;
 use PHPWhoisLite\Resource\Server;
 use PHPWhoisLite\Resource\ServerList;
 use PHPWhoisLite\Resource\ServerTypeEnum;
-use PHPWhoisLite\Response\RdapResponse;
-use PHPWhoisLite\Response\WhoisResponse;
 
 trait ServerDetectorTrait
 {

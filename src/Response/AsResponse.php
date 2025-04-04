@@ -2,18 +2,17 @@
 
 declare(strict_types=1);
 
-namespace PHPWhoisLite;
+namespace PHPWhoisLite\Response;
 
+use PHPWhoisLite\NetworkClient\RdapResponse;
+use PHPWhoisLite\NetworkClient\WhoisResponse;
 use PHPWhoisLite\Resource\Server;
-use PHPWhoisLite\Response\RdapResponse;
-use PHPWhoisLite\Response\WhoisResponse;
 
-final readonly class Data
+final readonly class AsResponse
 {
     public function __construct(
         public RdapResponse|WhoisResponse $response,
         public Server $server,
-        public QueryTypeEnum $type,
     ) {
     }
 

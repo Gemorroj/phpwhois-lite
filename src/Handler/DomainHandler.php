@@ -7,17 +7,17 @@ namespace PHPWhoisLite\Handler;
 use Algo26\IdnaConvert\Exception\AlreadyPunycodeException;
 use Algo26\IdnaConvert\Exception\InvalidCharacterException as Algo26InvalidCharacterException;
 use Algo26\IdnaConvert\ToIdn;
-use PHPWhoisLite\Data;
 use PHPWhoisLite\Exception\InvalidCharacterException;
 use PHPWhoisLite\Exception\NetworkException;
 use PHPWhoisLite\Exception\QueryRateLimitExceededException;
+use PHPWhoisLite\Exception\RegistrarServerException;
 use PHPWhoisLite\Exception\TimeoutException;
 use PHPWhoisLite\HandlerInterface;
-use PHPWhoisLite\NetworkClient;
-use PHPWhoisLite\QueryTypeEnum;
+use PHPWhoisLite\NetworkClient\NetworkClient;
 use PHPWhoisLite\Resource\Server;
 use PHPWhoisLite\Resource\ServerList;
 use PHPWhoisLite\Resource\ServerTypeEnum;
+use PHPWhoisLite\Response\DomainResponse;
 use PHPWhoisLite\ServerDetectorTrait;
 use Psr\Cache\InvalidArgumentException;
 
@@ -37,7 +37,7 @@ final readonly class DomainHandler implements HandlerInterface
      * @throws NetworkException
      * @throws \JsonException
      */
-    public function process(string $query, ?Server $forceServer = null): Data
+    public function process(string $query, ?Server $forceServer = null): DomainResponse
     {
         try {
             $query = (new ToIdn())->convert($query);
@@ -52,18 +52,27 @@ final readonly class DomainHandler implements HandlerInterface
         $q = $this->prepareServerQuery($server, $query);
         $response = $this->networkClient->getResponse($server, $q);
 
+        $registrarResponse = null;
+        $registrarServerException = null;
+        $registrarServer = null;
         if (!$forceServer) {
             $registrarServer = $this->findRegistrarServer($response);
             if ($registrarServer && !$registrarServer->isEqual($server)) {
                 $q = $this->prepareServerQuery($registrarServer, $query);
-                $response = $this->networkClient->getResponse($registrarServer, $q);
+                try {
+                    $registrarResponse = $this->networkClient->getResponse($registrarServer, $q);
+                } catch (\Exception $e) {
+                    $registrarServerException = new RegistrarServerException('Can\'t load info from registrar server.', previous: $e);
+                }
             }
         }
 
-        return new Data(
+        return new DomainResponse(
             $response,
-            $registrarServer ?? $server,
-            QueryTypeEnum::DOMAIN,
+            $server,
+            $registrarResponse,
+            $registrarServer,
+            $registrarServerException
         );
     }
 

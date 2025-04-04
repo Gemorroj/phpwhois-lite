@@ -4,15 +4,14 @@ declare(strict_types=1);
 
 namespace PHPWhoisLite\Handler;
 
-use PHPWhoisLite\Data;
 use PHPWhoisLite\Exception\NetworkException;
 use PHPWhoisLite\Exception\QueryRateLimitExceededException;
 use PHPWhoisLite\Exception\TimeoutException;
 use PHPWhoisLite\HandlerInterface;
-use PHPWhoisLite\NetworkClient;
-use PHPWhoisLite\QueryTypeEnum;
+use PHPWhoisLite\NetworkClient\NetworkClient;
 use PHPWhoisLite\Resource\Server;
 use PHPWhoisLite\Resource\ServerTypeEnum;
+use PHPWhoisLite\Response\AsResponse;
 use PHPWhoisLite\ServerDetectorTrait;
 use Psr\Cache\InvalidArgumentException;
 
@@ -31,13 +30,14 @@ final readonly class AsHandler implements HandlerInterface
      * @throws NetworkException
      * @throws \JsonException
      */
-    public function process(string $query, ?Server $forceServer = null): Data
+    public function process(string $query, ?Server $forceServer = null): AsResponse
     {
         $server = $forceServer ?? $this->defaultServer;
 
         $q = $this->prepareServerQuery($server, $query);
         $response = $this->networkClient->getResponse($server, $q);
 
+        // todo: always use hardcoded servers by ICANN list. add it to ServerList
         if (!$forceServer) {
             $baseServer = $this->findBaseServer($response);
             if ($baseServer && !$baseServer->isEqual($server)) {
@@ -46,10 +46,9 @@ final readonly class AsHandler implements HandlerInterface
             }
         }
 
-        return new Data(
+        return new AsResponse(
             $response,
             $baseServer ?? $server,
-            QueryTypeEnum::AS,
         );
     }
 

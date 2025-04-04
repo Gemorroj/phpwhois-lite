@@ -3,7 +3,6 @@
 namespace PHPWhoisLite\Tests\Handler;
 
 use PHPWhoisLite\Handler\AsHandler;
-use PHPWhoisLite\QueryTypeEnum;
 use PHPWhoisLite\Tests\BaseTestCase;
 
 final class AsHandlerTest extends BaseTestCase
@@ -16,7 +15,6 @@ final class AsHandlerTest extends BaseTestCase
         // var_dump($data->getResponseAsString());
         self::assertStringContainsString('as-block:       AS4608 - AS4865', $data->getResponseAsString());
         self::assertEquals('whois.apnic.net', $data->server->server);
-        self::assertEquals(QueryTypeEnum::AS, $data->type);
     }
 
     public function testArin(): void
@@ -27,7 +25,6 @@ final class AsHandlerTest extends BaseTestCase
         // var_dump($data->getResponseAsString());
         self::assertStringContainsString('ASName:         OOALC-HOSTNET-AS', $data->getResponseAsString());
         self::assertEquals('whois.arin.net', $data->server->server);
-        self::assertEquals(QueryTypeEnum::AS, $data->type);
     }
 
     public function testRipe(): void
@@ -38,7 +35,6 @@ final class AsHandlerTest extends BaseTestCase
         // var_dump($data->getResponseAsString());
         self::assertStringContainsString('as-block:       AS3209 - AS3353', $data->getResponseAsString());
         self::assertEquals('whois.ripe.net', $data->server->server);
-        self::assertEquals(QueryTypeEnum::AS, $data->type);
     }
 
     public function testLacnic(): void
@@ -49,7 +45,6 @@ final class AsHandlerTest extends BaseTestCase
         // var_dump($data->getResponseAsString());
         self::assertStringContainsString('responsible: Ernesto Majó', $data->getResponseAsString());
         self::assertEquals('whois.lacnic.net', $data->server->server);
-        self::assertEquals(QueryTypeEnum::AS, $data->type);
     }
 
     public function testAfrinic(): void
@@ -60,6 +55,5 @@ final class AsHandlerTest extends BaseTestCase
         // var_dump($data->getResponseAsString());
         self::assertStringContainsString('aut-num:        AS33764', $data->getResponseAsString());
         self::assertEquals('whois.afrinic.net', $data->server->server);
-        self::assertEquals(QueryTypeEnum::AS, $data->type);
     }
 }
