@@ -1,7 +1,7 @@
 {
     "name": "gemorroj/phpwhois-lite",
     "description": "PHPWhois-lite",
-    "keywords": ["whois","phpwhois"],
+    "keywords": ["whois","phpwhois", "rdap", "phprdap", "lookup"],
     "type": "library",
     "license": "LGPL-3.0-or-later",
     "authors": [

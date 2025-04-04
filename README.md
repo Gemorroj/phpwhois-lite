@@ -25,6 +25,7 @@ composer require gemorroj/phpwhois-lite
 <?php
 use PHPWhoisLite\NetworkClient\NetworkClient;
 use PHPWhoisLite\Whois;
+use PHPWhoisLite\Response\DomainRegistrarResponse;
 use Psr\Log\NullLogger;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 
@@ -41,6 +42,7 @@ $whois = new Whois($networkClient);
 // $data = $whois->process('sirus.su', WhoisServer('whois.tcinet.ru', ServerTypeEnum::WHOIS)); // custom WHOIS server
 // $data = $whois->process('sirus.su', WhoisServer('https://www.nic.ru/rdap', ServerTypeEnum::RDAP)); // custom RDAP server
 $data = $whois->process('vk.com');
+$actualResponse = $data->registrarResponse instanceof DomainRegistrarResponse ? $data->registrarResponse->response : $data->response;
 
 print_r($data);
 /*
@@ -93,9 +95,15 @@ Registrar WHOIS Server: whois.nic.ru
 ```
 
 ### Notes:
-- https://github.com/weppos/whois
+- update WHOIS/RDAP servers:
+  - ```shell
+    php bin/asn-servers-updater.php
+    php bin/ip-servers-updater.php
+    php bin/tld-servers-updater.php
+    ```
+- https://github.com/weppos/whois/tree/main/data
 - https://habr.com/ru/articles/165869/
-- https://lookup.icann.org/ru/lookup:
+- https://lookup.icann.org/ru/lookup research:
     - domain: 1 request to https://data.iana.org/rdap/dns.json, 2 request to rdap server, 3 request to registrar rdap server
         - if registrar rdap server fails (vk.com for example), if shows notice and info from prev rdap server
     - ipv4: 1 request https://data.iana.org/rdap/ipv4.json, 2 request to rdap server
