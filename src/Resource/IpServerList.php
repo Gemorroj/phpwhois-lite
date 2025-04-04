@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PHPWhoisLite\Resource;
+namespace WhoRdap\Resource;
 
-final class IpServerList
+class IpServerList
 {
     public Server $serverDefault;
     /**

@@ -1,6 +1,6 @@
 {
-    "name": "gemorroj/phpwhois-lite",
-    "description": "PHPWhois-lite",
+    "name": "gemorroj/whordap",
+    "description": "WHOIS/RDAP client",
     "keywords": ["whois","phpwhois", "rdap", "phprdap", "lookup"],
     "type": "library",
     "license": "LGPL-3.0-or-later",
@@ -28,12 +28,12 @@
     },
     "autoload": {
         "psr-4": {
-            "PHPWhoisLite\\": "src/"
+            "WhoRdap\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "PHPWhoisLite\\Tests\\": "tests/"
+            "WhoRdap\\Tests\\": "tests/"
         }
     },
     "suggest": {

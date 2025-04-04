@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PHPWhoisLite\Response;
+namespace WhoRdap\Response;
 
-use PHPWhoisLite\NetworkClient\RdapResponse;
-use PHPWhoisLite\NetworkClient\WhoisResponse;
-use PHPWhoisLite\Resource\Server;
+use WhoRdap\NetworkClient\RdapResponse;
+use WhoRdap\NetworkClient\WhoisResponse;
+use WhoRdap\Resource\Server;
 
 final readonly class IpResponse
 {

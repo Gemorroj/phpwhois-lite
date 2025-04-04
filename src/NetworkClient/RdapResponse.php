@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PHPWhoisLite\NetworkClient;
+namespace WhoRdap\NetworkClient;
 
 final readonly class RdapResponse
 {

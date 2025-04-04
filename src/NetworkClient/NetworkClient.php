@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace PHPWhoisLite\NetworkClient;
+namespace WhoRdap\NetworkClient;
 
-use PHPWhoisLite\Exception\HttpException;
-use PHPWhoisLite\Exception\NetworkException;
-use PHPWhoisLite\Exception\QueryRateLimitExceededException;
-use PHPWhoisLite\Exception\TimeoutException;
-use PHPWhoisLite\NetworkClientInterface;
-use PHPWhoisLite\Resource\Server;
-use PHPWhoisLite\Resource\ServerTypeEnum;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Cache\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
+use WhoRdap\Exception\HttpException;
+use WhoRdap\Exception\NetworkException;
+use WhoRdap\Exception\QueryRateLimitExceededException;
+use WhoRdap\Exception\TimeoutException;
+use WhoRdap\NetworkClientInterface;
+use WhoRdap\Resource\Server;
+use WhoRdap\Resource\ServerTypeEnum;
 
 readonly class NetworkClient implements NetworkClientInterface
 {
@@ -124,7 +124,7 @@ readonly class NetworkClient implements NetworkClientInterface
         \curl_setopt($fp, \CURLOPT_TIMEOUT, $this->timeout);
         \curl_setopt($fp, \CURLOPT_BUFFERSIZE, $this->buffer);
         \curl_setopt($fp, \CURLOPT_HTTPHEADER, [
-            'User-Agent: PHPWhois Lite',
+            'User-Agent: WhoRdap',
         ]);
 
         $this->logger?->debug('Execute request to HTTP server...');

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PHPWhoisLite\Exception;
+namespace WhoRdap\Exception;
 
 final class HttpException extends NetworkException
 {

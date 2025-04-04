@@ -1,17 +1,17 @@
 <?php
 
-namespace PHPWhoisLite\Tests\Handler;
+namespace WhoRdap\Tests\Handler;
 
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPWhoisLite\Exception\NetworkException;
-use PHPWhoisLite\Exception\RegistrarServerException;
-use PHPWhoisLite\Handler\DomainHandler;
-use PHPWhoisLite\NetworkClient\RdapResponse;
-use PHPWhoisLite\NetworkClient\WhoisResponse;
-use PHPWhoisLite\Resource\Server;
-use PHPWhoisLite\Resource\ServerTypeEnum;
-use PHPWhoisLite\Resource\TldServerList;
-use PHPWhoisLite\Tests\BaseTestCase;
+use WhoRdap\Exception\NetworkException;
+use WhoRdap\Exception\RegistrarServerException;
+use WhoRdap\Handler\DomainHandler;
+use WhoRdap\NetworkClient\RdapResponse;
+use WhoRdap\NetworkClient\WhoisResponse;
+use WhoRdap\Resource\Server;
+use WhoRdap\Resource\ServerTypeEnum;
+use WhoRdap\Resource\TldServerList;
+use WhoRdap\Tests\BaseTestCase;
 
 final class DomainHandlerTest extends BaseTestCase
 {

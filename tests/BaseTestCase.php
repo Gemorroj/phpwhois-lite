@@ -1,15 +1,15 @@
 <?php
 
-namespace PHPWhoisLite\Tests;
+namespace WhoRdap\Tests;
 
 use PHPUnit\Framework\TestCase;
-use PHPWhoisLite\NetworkClient\NetworkClient;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use WhoRdap\NetworkClient\NetworkClient;
 
 abstract class BaseTestCase extends TestCase
 {
@@ -24,7 +24,7 @@ abstract class BaseTestCase extends TestCase
             return new NetworkClient(logger: $logger);
         }
 
-        $cache = new FilesystemAdapter('phpwhois-lite', $cacheTime);
+        $cache = new FilesystemAdapter('whordap', $cacheTime);
 
         return new NetworkClient(cache: $cache, logger: $logger);
     }

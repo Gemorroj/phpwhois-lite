@@ -2,27 +2,27 @@
 
 declare(strict_types=1);
 
-namespace PHPWhoisLite\Handler;
+namespace WhoRdap\Handler;
 
 use Algo26\IdnaConvert\Exception\AlreadyPunycodeException;
 use Algo26\IdnaConvert\Exception\InvalidCharacterException as Algo26InvalidCharacterException;
 use Algo26\IdnaConvert\ToIdn;
-use PHPWhoisLite\Exception\InvalidCharacterException;
-use PHPWhoisLite\Exception\InvalidWhoisServerException;
-use PHPWhoisLite\Exception\NetworkException;
-use PHPWhoisLite\Exception\QueryRateLimitExceededException;
-use PHPWhoisLite\Exception\RegistrarServerException;
-use PHPWhoisLite\Exception\TimeoutException;
-use PHPWhoisLite\HandlerInterface;
-use PHPWhoisLite\NetworkClient\NetworkClient;
-use PHPWhoisLite\NetworkClient\RdapResponse;
-use PHPWhoisLite\NetworkClient\WhoisResponse;
-use PHPWhoisLite\Resource\Server;
-use PHPWhoisLite\Resource\ServerTypeEnum;
-use PHPWhoisLite\Resource\TldServerList;
-use PHPWhoisLite\Response\DomainRegistrarResponse;
-use PHPWhoisLite\Response\DomainResponse;
 use Psr\Cache\InvalidArgumentException;
+use WhoRdap\Exception\InvalidCharacterException;
+use WhoRdap\Exception\InvalidWhoisServerException;
+use WhoRdap\Exception\NetworkException;
+use WhoRdap\Exception\QueryRateLimitExceededException;
+use WhoRdap\Exception\RegistrarServerException;
+use WhoRdap\Exception\TimeoutException;
+use WhoRdap\HandlerInterface;
+use WhoRdap\NetworkClient\NetworkClient;
+use WhoRdap\NetworkClient\RdapResponse;
+use WhoRdap\NetworkClient\WhoisResponse;
+use WhoRdap\Resource\Server;
+use WhoRdap\Resource\ServerTypeEnum;
+use WhoRdap\Resource\TldServerList;
+use WhoRdap\Response\DomainRegistrarResponse;
+use WhoRdap\Response\DomainResponse;
 
 final readonly class DomainHandler implements HandlerInterface
 {

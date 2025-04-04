@@ -11,7 +11,7 @@
     </php>
 
     <testsuites>
-        <testsuite name="PHPWhoisLite">
+        <testsuite name="WhoRdap">
             <directory>tests</directory>
         </testsuite>
     </testsuites>

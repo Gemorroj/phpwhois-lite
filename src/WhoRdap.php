@@ -2,22 +2,22 @@
 
 declare(strict_types=1);
 
-namespace PHPWhoisLite;
+namespace WhoRdap;
 
-use PHPWhoisLite\Exception\EmptyQueryException;
-use PHPWhoisLite\Handler\AsnHandler;
-use PHPWhoisLite\Handler\DomainHandler;
-use PHPWhoisLite\Handler\IpHandler;
-use PHPWhoisLite\NetworkClient\NetworkClient;
-use PHPWhoisLite\Resource\AsnServerList;
-use PHPWhoisLite\Resource\IpServerList;
-use PHPWhoisLite\Resource\Server;
-use PHPWhoisLite\Resource\TldServerList;
-use PHPWhoisLite\Response\AsnResponse;
-use PHPWhoisLite\Response\DomainResponse;
-use PHPWhoisLite\Response\IpResponse;
+use WhoRdap\Exception\EmptyQueryException;
+use WhoRdap\Handler\AsnHandler;
+use WhoRdap\Handler\DomainHandler;
+use WhoRdap\Handler\IpHandler;
+use WhoRdap\NetworkClient\NetworkClient;
+use WhoRdap\Resource\AsnServerList;
+use WhoRdap\Resource\IpServerList;
+use WhoRdap\Resource\Server;
+use WhoRdap\Resource\TldServerList;
+use WhoRdap\Response\AsnResponse;
+use WhoRdap\Response\DomainResponse;
+use WhoRdap\Response\IpResponse;
 
-final readonly class Whois
+final readonly class WhoRdap
 {
     public function __construct(
         private ?NetworkClient $networkClient = null,

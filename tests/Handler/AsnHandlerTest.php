@@ -1,13 +1,13 @@
 <?php
 
-namespace PHPWhoisLite\Tests\Handler;
+namespace WhoRdap\Tests\Handler;
 
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPWhoisLite\Handler\AsnHandler;
-use PHPWhoisLite\Resource\AsnServerList;
-use PHPWhoisLite\Resource\Server;
-use PHPWhoisLite\Resource\ServerTypeEnum;
-use PHPWhoisLite\Tests\BaseTestCase;
+use WhoRdap\Handler\AsnHandler;
+use WhoRdap\Resource\AsnServerList;
+use WhoRdap\Resource\Server;
+use WhoRdap\Resource\ServerTypeEnum;
+use WhoRdap\Tests\BaseTestCase;
 
 final class AsnHandlerTest extends BaseTestCase
 {

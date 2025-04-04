@@ -7,7 +7,7 @@ function connect(string $url): CurlHandle
     \curl_setopt($fp, \CURLOPT_RETURNTRANSFER, true);
     \curl_setopt($fp, \CURLOPT_HTTPHEADER, [
         'Connection: Keep-Alive',
-        'User-Agent: PHPWhois Lite',
+        'User-Agent: WhoRdap',
     ]);
 
     return $fp;

@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-namespace PHPWhoisLite\Exception;
+namespace WhoRdap\Exception;
 
-class InvalidWhoisServerException extends \Exception
+final class InvalidWhoisServerException extends \Exception
 {
 }

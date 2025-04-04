@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace PHPWhoisLite\Handler;
+namespace WhoRdap\Handler;
 
-use PHPWhoisLite\Exception\NetworkException;
-use PHPWhoisLite\Exception\QueryRateLimitExceededException;
-use PHPWhoisLite\Exception\TimeoutException;
-use PHPWhoisLite\HandlerInterface;
-use PHPWhoisLite\NetworkClient\NetworkClient;
-use PHPWhoisLite\Resource\AsnServerList;
-use PHPWhoisLite\Resource\Server;
-use PHPWhoisLite\Resource\ServerTypeEnum;
-use PHPWhoisLite\Response\AsnResponse;
 use Psr\Cache\InvalidArgumentException;
+use WhoRdap\Exception\NetworkException;
+use WhoRdap\Exception\QueryRateLimitExceededException;
+use WhoRdap\Exception\TimeoutException;
+use WhoRdap\HandlerInterface;
+use WhoRdap\NetworkClient\NetworkClient;
+use WhoRdap\Resource\AsnServerList;
+use WhoRdap\Resource\Server;
+use WhoRdap\Resource\ServerTypeEnum;
+use WhoRdap\Response\AsnResponse;
 
 final readonly class AsnHandler implements HandlerInterface
 {

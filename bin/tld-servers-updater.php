@@ -7,9 +7,9 @@ $template = '<?php
 
 declare(strict_types=1);
 
-namespace PHPWhoisLite\Resource;
+namespace WhoRdap\Resource;
 
-final class TldServerList
+class TldServerList
 {
     public Server $serverDefault;
     /**

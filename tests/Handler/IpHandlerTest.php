@@ -1,13 +1,13 @@
 <?php
 
-namespace PHPWhoisLite\Tests\Handler;
+namespace WhoRdap\Tests\Handler;
 
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPWhoisLite\Handler\IpHandler;
-use PHPWhoisLite\Resource\IpServerList;
-use PHPWhoisLite\Resource\Server;
-use PHPWhoisLite\Resource\ServerTypeEnum;
-use PHPWhoisLite\Tests\BaseTestCase;
+use WhoRdap\Handler\IpHandler;
+use WhoRdap\Resource\IpServerList;
+use WhoRdap\Resource\Server;
+use WhoRdap\Resource\ServerTypeEnum;
+use WhoRdap\Tests\BaseTestCase;
 
 final class IpHandlerTest extends BaseTestCase
 {

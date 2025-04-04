@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace PHPWhoisLite\Response;
+namespace WhoRdap\Response;
 
-use PHPWhoisLite\Exception\RegistrarServerException;
-use PHPWhoisLite\NetworkClient\RdapResponse;
-use PHPWhoisLite\NetworkClient\WhoisResponse;
-use PHPWhoisLite\Resource\Server;
+use WhoRdap\Exception\RegistrarServerException;
+use WhoRdap\NetworkClient\RdapResponse;
+use WhoRdap\NetworkClient\WhoisResponse;
+use WhoRdap\Resource\Server;
 
 final readonly class DomainResponse
 {

@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-namespace PHPWhoisLite\Exception;
+namespace WhoRdap\Exception;
 
-class InvalidCharacterException extends \Exception
+final class InvalidCharacterException extends \Exception
 {
 }

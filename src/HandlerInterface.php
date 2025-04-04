@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace PHPWhoisLite;
+namespace WhoRdap;
 
-use PHPWhoisLite\Resource\Server;
-use PHPWhoisLite\Response\AsnResponse;
-use PHPWhoisLite\Response\DomainResponse;
-use PHPWhoisLite\Response\IpResponse;
+use WhoRdap\Resource\Server;
+use WhoRdap\Response\AsnResponse;
+use WhoRdap\Response\DomainResponse;
+use WhoRdap\Response\IpResponse;
 
 interface HandlerInterface
 {

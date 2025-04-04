@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-namespace PHPWhoisLite\Exception;
+namespace WhoRdap\Exception;
 
-final class EmptyQueryException extends HandlerException
+final class EmptyQueryException extends \Exception
 {
 }

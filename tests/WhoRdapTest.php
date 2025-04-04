@@ -1,19 +1,19 @@
 <?php
 
-namespace PHPWhoisLite\Tests;
+namespace WhoRdap\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPWhoisLite\Handler\AsnHandler;
-use PHPWhoisLite\Handler\DomainHandler;
-use PHPWhoisLite\Handler\IpHandler;
-use PHPWhoisLite\Whois;
+use WhoRdap\Handler\AsnHandler;
+use WhoRdap\Handler\DomainHandler;
+use WhoRdap\Handler\IpHandler;
+use WhoRdap\WhoRdap;
 
-final class WhoisTest extends BaseTestCase
+final class WhoRdapTest extends BaseTestCase
 {
     #[DataProvider('getQueries')]
     public function testCreateQueryHandler(string $query, string $className): void
     {
-        $whois = new Whois();
+        $whois = new WhoRdap();
         $reflectionObject = new \ReflectionObject($whois);
         $reflectionMethod = $reflectionObject->getMethod('createQueryHandler');
         $handler = $reflectionMethod->invoke($whois, $query);

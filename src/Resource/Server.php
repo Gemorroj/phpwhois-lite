@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PHPWhoisLite\Resource;
+namespace WhoRdap\Resource;
 
 final readonly class Server
 {
