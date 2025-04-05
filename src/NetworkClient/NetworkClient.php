@@ -161,7 +161,7 @@ readonly class NetworkClient implements NetworkClientInterface
 
         $httpCode = \curl_getinfo($fp, \CURLINFO_HTTP_CODE);
         if ($httpCode >= 400) {
-            throw HttpException::create($httpCode, $raw);
+            throw HttpException::create($httpCode, $url, $raw);
         }
 
         if (!\json_validate($raw)) {
