@@ -17,10 +17,7 @@ foreach ($dataIpv4['services'] as $value) {
     $server = $value[1][0];
     $ipList = $value[0];
     foreach ($ipList as $ip) {
-        $servers[$ip] = [
-            'type' => 'rdap',
-            'server' => $server,
-        ];
+        $servers[$ip] = $server;
     }
 }
 echo 'End scan IPv4.'.\PHP_EOL;

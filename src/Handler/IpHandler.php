@@ -5,43 +5,62 @@ declare(strict_types=1);
 namespace WhoRdap\Handler;
 
 use Psr\Cache\InvalidArgumentException;
+use WhoRdap\Exception\HttpException;
+use WhoRdap\Exception\InvalidResponseException;
 use WhoRdap\Exception\NetworkException;
 use WhoRdap\Exception\QueryRateLimitExceededException;
 use WhoRdap\Exception\TimeoutException;
 use WhoRdap\HandlerInterface;
+use WhoRdap\IpServerListInterface;
 use WhoRdap\NetworkClient\NetworkClient;
-use WhoRdap\Resource\IpServerList;
-use WhoRdap\Resource\Server;
-use WhoRdap\Resource\ServerTypeEnum;
-use WhoRdap\Response\IpResponse;
+use WhoRdap\Response\RdapIpResponse;
+use WhoRdap\Response\WhoisIpResponse;
 
 final readonly class IpHandler implements HandlerInterface
 {
-    public function __construct(private NetworkClient $networkClient, private IpServerList $serverList = new IpServerList())
+    public function __construct(private NetworkClient $networkClient, private IpServerListInterface $serverList)
     {
     }
 
     /**
-     * @throws InvalidArgumentException
-     * @throws TimeoutException
      * @throws QueryRateLimitExceededException
+     * @throws InvalidArgumentException
      * @throws NetworkException
-     * @throws \JsonException
+     * @throws TimeoutException
      */
-    public function process(string $query, ?Server $forceServer = null): IpResponse
+    public function processWhois(string $query, ?string $forceServer = null): WhoisIpResponse
     {
         $server = $forceServer ?? $this->findIpServer($query);
 
-        $q = $this->prepareServerQuery($server, $query);
-        $response = $this->networkClient->getResponse($server, $q);
+        $q = $this->prepareWhoisServerQuery($server, $query);
+        $response = $this->networkClient->getWhoisResponse($server, $q);
 
-        return new IpResponse(
+        return new WhoisIpResponse(
             $response,
             $server,
         );
     }
 
-    private function findIpServer(string $query): Server
+    /**
+     * @throws InvalidResponseException
+     * @throws InvalidArgumentException
+     * @throws HttpException
+     * @throws NetworkException
+     */
+    public function processRdap(string $query, ?string $forceServer = null): RdapIpResponse
+    {
+        $server = $forceServer ?? $this->findIpServer($query);
+
+        $q = $this->prepareRdapServerQuery($server, $query);
+        $response = $this->networkClient->getRdapResponse($server, $q);
+
+        return new RdapIpResponse(
+            $response,
+            $server,
+        );
+    }
+
+    private function findIpServer(string $query): string
     {
         $slashPos = \strpos($query, '/'); // skip query CIDR
         if (false === $slashPos) {
@@ -58,7 +77,7 @@ final readonly class IpHandler implements HandlerInterface
         return $this->findIpv4Server($ip) ?? $this->serverList->serverDefault;
     }
 
-    private function findIpv4Server(string $ip): ?Server
+    private function findIpv4Server(string $ip): ?string
     {
         foreach ($this->serverList->serversIpv4 as $ipv4Cidr => $server) {
             $parts = \explode('/', $ipv4Cidr, 2);
@@ -78,7 +97,7 @@ final readonly class IpHandler implements HandlerInterface
         return null;
     }
 
-    private function findIpv6Server(string $ip): ?Server
+    private function findIpv6Server(string $ip): ?string
     {
         foreach ($this->serverList->serversIpv6 as $ipv6Cidr => $server) {
             $parts = \explode('/', $ipv6Cidr, 2);
@@ -112,12 +131,14 @@ final readonly class IpHandler implements HandlerInterface
         return null;
     }
 
-    private function prepareServerQuery(Server $server, string $query): string
+    private function prepareRdapServerQuery(string $server, string $query): string
     {
-        if (ServerTypeEnum::RDAP === $server->type) {
-            return '/ip/'.$query;
-        }
-        if (ServerTypeEnum::WHOIS === $server->type && \in_array($server->server, ['whois.arin.net', 'whois.arin.net:43'], true)) {
+        return '/ip/'.$query;
+    }
+
+    private function prepareWhoisServerQuery(string $server, string $query): string
+    {
+        if (\in_array($server, ['whois.arin.net', 'whois.arin.net:43'], true)) {
             $isCidr = \str_contains($query, '/');
 
             return $isCidr ? 'r = '.$query : 'z '.$query;

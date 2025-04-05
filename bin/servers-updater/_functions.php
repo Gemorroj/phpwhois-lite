@@ -35,18 +35,18 @@ function disconnect(CurlHandle $fp): void
 }
 
 /**
- * @param array<string, array{type: string, server: string}> $servers
+ * @param array<string, string> $servers
  *
- * @return array<string, array{type: string, server: string}>
+ * @return array<string, string>
  */
 function cleanupTldServers(array $servers): array
 {
-    foreach ($servers as $tld => $value) {
+    foreach ($servers as $tld => $server) {
         if (\substr_count($tld, '.') > 1) {
             $lastDotPos = \strrpos($tld, '.');
             $globalTld = \substr($tld, $lastDotPos);
 
-            if (isset($servers[$globalTld]) && $servers[$globalTld]['server'] === $value['server']) {
+            if (isset($servers[$globalTld]) && $servers[$globalTld] === $server) {
                 unset($servers[$tld]);
             }
         }

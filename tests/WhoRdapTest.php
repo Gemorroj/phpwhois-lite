@@ -11,14 +11,31 @@ use WhoRdap\WhoRdap;
 final class WhoRdapTest extends BaseTestCase
 {
     #[DataProvider('getQueries')]
-    public function testCreateQueryHandler(string $query, string $className): void
+    public function testCreateWhoisQueryHandler(string $query, string $className): void
     {
         $whois = new WhoRdap();
         $reflectionObject = new \ReflectionObject($whois);
-        $reflectionMethod = $reflectionObject->getMethod('createQueryHandler');
+        $reflectionMethod = $reflectionObject->getMethod('createWhoisQueryHandler');
         $handler = $reflectionMethod->invoke($whois, $query);
-
         self::assertEquals($handler::class, $className);
+
+        $reflectionObjectHandler = new \ReflectionObject($handler);
+        $reflectionProperty = $reflectionObjectHandler->getProperty('serverList');
+        self::assertStringStartsWith('WhoRdap\\Resource\\Whois', $reflectionProperty->getValue($handler)::class);
+    }
+
+    #[DataProvider('getQueries')]
+    public function testCreateRdapQueryHandler(string $query, string $className): void
+    {
+        $whois = new WhoRdap();
+        $reflectionObject = new \ReflectionObject($whois);
+        $reflectionMethod = $reflectionObject->getMethod('createRdapQueryHandler');
+        $handler = $reflectionMethod->invoke($whois, $query);
+        self::assertEquals($handler::class, $className);
+
+        $reflectionObjectHandler = new \ReflectionObject($handler);
+        $reflectionProperty = $reflectionObjectHandler->getProperty('serverList');
+        self::assertStringStartsWith('WhoRdap\\Resource\\Rdap', $reflectionProperty->getValue($handler)::class);
     }
 
     public static function getQueries(): \Generator

@@ -17,10 +17,7 @@ foreach ($dataAsn['services'] as $value) {
     $server = $value[1][0];
     $asnList = $value[0];
     foreach ($asnList as $asn) {
-        $servers[$asn] = [
-            'type' => 'rdap',
-            'server' => $server,
-        ];
+        $servers[$asn] = $server;
     }
 }
 echo 'End scan ASN.'.\PHP_EOL;

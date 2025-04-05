@@ -6,19 +6,16 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use WhoRdap\Exception\NetworkException;
 use WhoRdap\Exception\RegistrarServerException;
 use WhoRdap\Handler\DomainHandler;
-use WhoRdap\NetworkClient\RdapResponse;
-use WhoRdap\NetworkClient\WhoisResponse;
-use WhoRdap\Resource\Server;
-use WhoRdap\Resource\ServerTypeEnum;
-use WhoRdap\Resource\TldServerList;
+use WhoRdap\Resource\RdapTldServerList;
+use WhoRdap\Resource\WhoisTldServerList;
 use WhoRdap\Tests\BaseTestCase;
 
 final class DomainHandlerTest extends BaseTestCase
 {
-    #[DataProvider('getDomains')]
-    public function testFindTldServer(string $query, ?Server $server): void
+    #[DataProvider('getDomainsWhois')]
+    public function testWhoisFindTldServer(string $query, ?string $server): void
     {
-        $handler = new DomainHandler($this->createLoggedClient(), self::createTldServerList());
+        $handler = new DomainHandler($this->createLoggedClient(), self::createWhoisTldServerList());
         $reflectionObject = new \ReflectionObject($handler);
         $reflectionMethod = $reflectionObject->getMethod('findTldServer');
         $result = $reflectionMethod->invoke($handler, $query);
@@ -26,44 +23,84 @@ final class DomainHandlerTest extends BaseTestCase
         self::assertEquals($server, $result);
     }
 
-    public static function getDomains(): \Generator
+    public static function getDomainsWhois(): \Generator
     {
-        yield ['vk.com', new Server('whois.verisign-grs.com', ServerTypeEnum::WHOIS)];
-        yield ['ya.ru', new Server('whois.tcinet.ru', ServerTypeEnum::WHOIS)];
-        yield ['test.org.ru', new Server('whois.nic.ru', ServerTypeEnum::WHOIS)];
-        yield ['test.tjmaxx', new Server('https://rdap.nic.tjmaxx/', ServerTypeEnum::RDAP)];
-        yield ['ru', self::createTldServerList()->serverDefault];
-        yield ['domain.unknowntld', self::createTldServerList()->serverDefault];
+        yield ['vk.com', 'whois.verisign-grs.com'];
+        yield ['ya.ru', 'whois.tcinet.ru'];
+        yield ['test.org.ru', 'whois.nic.ru'];
+        yield ['xn--d1abbgf6aiiy.xn--p1ai', 'whois.tcinet.ru']; // Algo26InvalidCharacterException
+        yield ['ru', self::createWhoisTldServerList()->serverDefault];
+        yield ['domain.unknowntld', self::createWhoisTldServerList()->serverDefault];
     }
 
-    #[DataProvider('getRegistrarData')]
-    public function testFindRegistrarServer(RdapResponse|WhoisResponse $response, ?Server $expectedServer): void
+    #[DataProvider('getDomainsRdap')]
+    public function testRdapFindTldServer(string $query, ?string $server): void
     {
-        $handler = new DomainHandler($this->createLoggedClient(), self::createTldServerList());
+        $handler = new DomainHandler($this->createLoggedClient(), self::createRdapTldServerList());
         $reflectionObject = new \ReflectionObject($handler);
-        $reflectionMethod = $reflectionObject->getMethod('findRegistrarServer');
+        $reflectionMethod = $reflectionObject->getMethod('findTldServer');
+        $result = $reflectionMethod->invoke($handler, $query);
+
+        self::assertEquals($server, $result);
+    }
+
+    public static function getDomainsRdap(): \Generator
+    {
+        yield ['vk.com', 'https://rdap.verisign.com/com/v1/'];
+        yield ['test.org.ru', 'https://www.nic.ru/rdap/'];
+        yield ['xn--41a.xn--p1acf', 'https://api.rdap.nic.xn--p1acf/']; // Algo26InvalidCharacterException
+        yield ['ru', self::createRdapTldServerList()->serverDefault];
+        yield ['domain.unknowntld', self::createRdapTldServerList()->serverDefault];
+    }
+
+    #[DataProvider('getRegistrarDataWhois')]
+    public function testFindWhoisRegistrarServer(string $response, ?string $expectedServer): void
+    {
+        $handler = new DomainHandler($this->createLoggedClient(), self::createWhoisTldServerList());
+        $reflectionObject = new \ReflectionObject($handler);
+        $reflectionMethod = $reflectionObject->getMethod('findWhoisRegistrarServer');
         $result = $reflectionMethod->invoke($handler, $response);
 
         self::assertEquals($expectedServer, $result);
     }
 
-    public static function getRegistrarData(): \Generator
+    public static function getRegistrarDataWhois(): \Generator
     {
-        yield [new WhoisResponse('   Registrar WHOIS Server: whois.nic.ru'), new Server('whois.nic.ru', ServerTypeEnum::WHOIS)];
-        yield [new WhoisResponse('   Registrar WHOIS Server: rwhois://whois.nic.ru'), new Server('whois.nic.ru', ServerTypeEnum::WHOIS)];
-        yield [new WhoisResponse('   test: string'), null];
-        yield [new WhoisResponse('   Registrar WHOIS Server: file://passwd.com'), null];
-        yield [new WhoisResponse('   Registrar WHOIS Server: '), null];
-        yield [new WhoisResponse('whois:        whois.tcinet.ru '), null]; // the pattern from whois.iana.org
-        yield [new WhoisResponse('whois:         '), null];
-        yield [new WhoisResponse(' whois:'), null];
+        yield ['   Registrar WHOIS Server: whois.nic.ru', 'whois.nic.ru'];
+        yield ['   Registrar WHOIS Server: rwhois://whois.nic.ru', 'whois.nic.ru'];
+        yield ['   test: string', null];
+        yield ['   Registrar WHOIS Server: file://passwd.com', null];
+        yield ['   Registrar WHOIS Server: ', null];
+        yield ['whois:        whois.tcinet.ru ', null]; // the pattern from whois.iana.org
+        yield ['whois:         ', null];
+        yield [' whois:', null];
+    }
+
+    #[DataProvider('getRegistrarDataRdap')]
+    public function testFindRdapRegistrarServer(string $response, ?string $expectedServer): void
+    {
+        $handler = new DomainHandler($this->createLoggedClient(), self::createRdapTldServerList());
+        $reflectionObject = new \ReflectionObject($handler);
+        $reflectionMethod = $reflectionObject->getMethod('findRdapRegistrarServer');
+        $result = $reflectionMethod->invoke($handler, $response);
+
+        self::assertEquals($expectedServer, $result);
+    }
+
+    public static function getRegistrarDataRdap(): \Generator
+    {
+        yield [\json_encode(['links' => [['href' => 'http://example.com', 'rel' => 'related', 'type' => 'application/rdap+json']]], \JSON_THROW_ON_ERROR), 'http://example.com'];
+        yield [\json_encode(['links' => [['href' => 'https://example.com/domain/TEST.RU', 'rel' => 'related', 'type' => 'application/rdap+json']]], \JSON_THROW_ON_ERROR), 'https://example.com/'];
+        yield [\json_encode(['links' => [['href' => 'https://example.com/v1/domain/TEST.RU', 'rel' => 'related', 'type' => 'application/rdap+json']]], \JSON_THROW_ON_ERROR), 'https://example.com/v1/'];
+        yield [\json_encode(['links' => [['href' => 'http://example.com', 'rel' => 'self', 'type' => 'application/rdap+json']]], \JSON_THROW_ON_ERROR), null];
+        yield ['   test: string', null];
     }
 
     #[DataProvider('getWhoisServers')]
-    public function testPrepareWhoisServer(string $server, ?Server $preparedServer): void
+    public function testPrepareWhoisServer(string $server, ?string $preparedServer): void
     {
         try {
-            $handler = new DomainHandler($this->createLoggedClient(), self::createTldServerList());
+            $handler = new DomainHandler($this->createLoggedClient(), self::createWhoisTldServerList());
             $reflectionObject = new \ReflectionObject($handler);
             $reflectionMethod = $reflectionObject->getMethod('prepareWhoisServer');
             $result = $reflectionMethod->invoke($handler, $server);
@@ -75,103 +112,200 @@ final class DomainHandlerTest extends BaseTestCase
 
     public static function getWhoisServers(): \Generator
     {
-        yield ['localhost', new Server('localhost', ServerTypeEnum::WHOIS)];
-        yield ['whois.nic.ru', new Server('whois.nic.ru', ServerTypeEnum::WHOIS)];
-        yield ['rwhois://whois.nic.ru', new Server('whois.nic.ru', ServerTypeEnum::WHOIS)];
-        yield ['whois://whois.nic.ru', new Server('whois.nic.ru', ServerTypeEnum::WHOIS)];
-        yield ['whois.nic.ru:44', new Server('whois.nic.ru:44', ServerTypeEnum::WHOIS)];
-        yield ['http://test.com/?123&456', null]; // ignore http servers
-        yield ['https://test.com/?123&456', null]; // ignore http servers
+        yield ['localhost', 'localhost'];
+        yield ['whois.nic.ru', 'whois.nic.ru'];
+        yield ['rwhois://whois.nic.ru', 'whois.nic.ru'];
+        yield ['whois://whois.nic.ru', 'whois.nic.ru'];
+        yield ['whois.nic.ru:44', 'whois.nic.ru:44'];
+        yield ['http://test.com/?123&456', null];
+        yield ['https://test.com/?123&456', null];
         yield ['file://passwords', null];
         yield ['/passwords', null];
         yield ['\\passwords', null];
     }
 
-    public function testRegistrarServerException(): void
+    #[DataProvider('getRdapServers')]
+    public function testPrepareRdapServer(string $server, ?string $preparedServer): void
     {
-        $serverList = new TldServerList();
-        $serverList->serverDefault = new Server('https://rdap.iana.org', ServerTypeEnum::RDAP);
+        try {
+            $handler = new DomainHandler($this->createLoggedClient(), self::createRdapTldServerList());
+            $reflectionObject = new \ReflectionObject($handler);
+            $reflectionMethod = $reflectionObject->getMethod('prepareRdapServer');
+            $result = $reflectionMethod->invoke($handler, $server);
+        } catch (\Exception) {
+            $result = null;
+        }
+        self::assertEquals($preparedServer, $result);
+    }
+
+    public static function getRdapServers(): \Generator
+    {
+        yield ['localhost', null];
+        yield ['whois.nic.ru', null];
+        yield ['rwhois://whois.nic.ru', null];
+        yield ['whois://whois.nic.ru', null];
+        yield ['whois.nic.ru:44', null];
+        yield ['http://test.com/?123&456', 'http://test.com/?123&456'];
+        yield ['https://test.com/?123&456', 'https://test.com/?123&456'];
+        yield ['file://passwords', null];
+        yield ['/passwords', null];
+        yield ['\\passwords', null];
+    }
+
+    public function testRegistrarServerExceptionRdap(): void
+    {
+        $serverList = new RdapTldServerList();
+        $serverList->serverDefault = 'https://rdap.iana.org';
         $serverList->servers = [
-            '.com' => new Server('https://rdap.verisign.com/com/v1/', ServerTypeEnum::RDAP),
+            '.com' => 'https://rdap.verisign.com/com/v1/',
         ];
 
         $handler = new DomainHandler($this->createLoggedClient(), $serverList);
-        $data = $handler->process('vk.com'); // https://www.nic.ru/rdap/ is seems broken for robots
-        // \file_put_contents('/test.txt', $data->getResponseAsString());
-        // var_dump($data->getResponseAsString());
+        $data = $handler->processRdap('vk.com'); // https://www.nic.ru/rdap/ is seems broken for robots
+        // \file_put_contents('/test.txt', $data->response);
+        // var_dump($data->response);
 
         self::assertInstanceOf(RegistrarServerException::class, $data->registrarResponse);
         self::assertEquals('Can\'t load info from registrar server.', $data->registrarResponse->getMessage());
-        self::assertIsArray($data->response->data); // RdapResponse
-        self::assertEquals('https://www.nic.ru/rdap/domain/VK.COM', $data->response->data['links'][1]['href']);
-        self::assertEquals('https://rdap.verisign.com/com/v1/', $data->server->server);
+        self::assertJson($data->response);
+        $json = \json_decode($data->response, true, 512, \JSON_THROW_ON_ERROR);
+        self::assertEquals('https://www.nic.ru/rdap/domain/VK.COM', $json['links'][1]['href']);
+        self::assertEquals('https://rdap.verisign.com/com/v1/', $data->server);
     }
 
-    public function testLocalhost(): void
+    public function testLocalhostRdap(): void
     {
-        $handler = new DomainHandler($this->createLoggedClient(), self::createTldServerList());
+        $handler = new DomainHandler($this->createLoggedClient(), self::createRdapTldServerList());
         $this->expectException(NetworkException::class);
-        $data = $handler->process('localhost');
-        // \file_put_contents('/test.txt', $data->getResponseAsString());
-        // var_dump($data->getResponseAsString());
+        $data = $handler->processRdap('localhost');
+        // \file_put_contents('/test.txt', $data->response);
+        // var_dump($data->response);
+        self::assertNull($data->registrarResponse);
+        self::assertStringContainsString('"Domain not found :","localhost"', $data->response);
+        self::assertEquals(self::createRdapTldServerList()->serverDefault, $data->server);
     }
 
-    // force whois server
-    public function testSirusSu(): void
+    public function testLocalhostWhois(): void
     {
-        $handler = new DomainHandler($this->createLoggedClient(), self::createTldServerList());
-        $data = $handler->process('sirus.su', new Server('whois.tcinet.ru', ServerTypeEnum::WHOIS));
-        // \file_put_contents('/test.txt', $data->getResponseAsString());
-        // var_dump($data->getResponseAsString());
+        $handler = new DomainHandler($this->createLoggedClient(), self::createWhoisTldServerList());
+        $data = $handler->processWhois('localhost');
+        // \file_put_contents('/test.txt', $data->response);
+        // var_dump($data->response);
+        self::assertNull($data->registrarResponse);
+        self::assertStringContainsString('You queried for localhost but this server does not have', $data->response);
+        self::assertEquals(self::createWhoisTldServerList()->serverDefault, $data->server);
+    }
+
+    public function testForceWhoisServer(): void
+    {
+        $handler = new DomainHandler($this->createLoggedClient(), self::createWhoisTldServerList());
+        $data = $handler->processWhois('sirus.su', 'whois.tcinet.ru');
+        // \file_put_contents('/test.txt', $data->response);
+        // var_dump($data->response);
 
         self::assertNull($data->registrarResponse);
-        self::assertStringContainsString('e-mail:        sir.nyll@gmail.com', $data->getResponseAsString());
-        self::assertEquals('whois.tcinet.ru', $data->server->server);
+        self::assertStringContainsString('e-mail:        sir.nyll@gmail.com', $data->response);
+        self::assertEquals('whois.tcinet.ru', $data->server);
     }
 
-    #[DataProvider('getDomainResponse')]
-    public function testProcess(
+    public function testForceRdapServer(): void
+    {
+        $handler = new DomainHandler($this->createLoggedClient(), self::createRdapTldServerList());
+        $data = $handler->processRdap('wikipedia.org', 'https://rdap.publicinterestregistry.org/rdap/');
+        // \file_put_contents('/test.txt', $data->response);
+        // var_dump($data->response);
+
+        self::assertNull($data->registrarResponse);
+        self::assertStringContainsString('"ldhName": "wikipedia.org"', $data->response); // todo
+        self::assertEquals('https://rdap.publicinterestregistry.org/rdap/', $data->server);
+    }
+
+    #[DataProvider('getWhoisDomainResponse')]
+    public function testProcessWhois(
         string $query,
         string $expectedServer,
         string $expectedResponse,
         ?string $expectedRegistrarServer,
         ?string $expectedRegistrarResponse,
     ): void {
-        $handler = new DomainHandler($this->createLoggedClient(), self::createTldServerList());
-        $data = $handler->process($query);
-        // \file_put_contents('/test.txt', $data->getResponseAsString());
-        // var_dump($data->getResponseAsString());
+        $handler = new DomainHandler($this->createLoggedClient(), self::createWhoisTldServerList());
+        $data = $handler->processWhois($query);
+        // \file_put_contents('/test.txt', $data->response);
+        // var_dump($data->response);
 
-        self::assertEquals($expectedServer, $data->server->server);
-        self::assertStringContainsString($expectedResponse, $data->getResponseAsString());
-        self::assertEquals($expectedRegistrarServer, $data->registrarResponse?->server->server);
+        self::assertEquals($expectedServer, $data->server);
+        self::assertStringContainsString($expectedResponse, $data->response);
+        self::assertEquals($expectedRegistrarServer, $data->registrarResponse?->server);
         if (null === $expectedRegistrarResponse) {
-            self::assertNull($data->registrarResponse?->getResponseAsString());
+            self::assertNull($data->registrarResponse?->response);
         } else {
-            self::assertStringContainsString($expectedRegistrarResponse, $data->registrarResponse?->getResponseAsString());
+            self::assertStringContainsString($expectedRegistrarResponse, $data->registrarResponse?->response);
         }
     }
 
-    public static function getDomainResponse(): \Generator
+    public static function getWhoisDomainResponse(): \Generator
     {
-        yield ['ru', self::createTldServerList()->serverDefault->server, '"Coordination Center for TLD RU"', null, null];
+        yield ['ru', self::createWhoisTldServerList()->serverDefault, 'organisation: Coordination Center for TLD RU', null, null];
         yield ['vk.com', 'whois.verisign-grs.com', 'Registrar URL: http://nic.ru', 'whois.nic.ru', 'Registrant Country: RU'];
         yield ['registro.br', 'whois.registro.br', 'Núcleo de Inf. e Coord. do Ponto BR - NIC.BR', null, null]; // non UTF-8
-        yield ['nic.tjmaxx', 'https://rdap.nic.tjmaxx/', '"eventActor": "The TJX Companies, Inc."', null, null]; // rdap server
         yield ['президент.рф', 'whois.tcinet.ru', 'org:           Special Communications and Information Service of the Federal Guard Service of the Russian Federation (Spetssvyaz FSO RF)', null, null]; // punycode
     }
 
-    private static function createTldServerList(): TldServerList
+    #[DataProvider('getRdapDomainResponse')]
+    public function testProcessRdap(
+        string $query,
+        string $expectedServer,
+        string $expectedResponse,
+        ?string $expectedRegistrarServer,
+        ?string $expectedRegistrarResponse,
+    ): void {
+        $handler = new DomainHandler($this->createLoggedClient(), self::createRdapTldServerList());
+        $data = $handler->processRdap($query);
+        // \file_put_contents('/test.txt', $data->response);
+        // var_dump($data->response);
+
+        self::assertEquals($expectedServer, $data->server);
+        self::assertStringContainsString($expectedResponse, $data->response);
+        self::assertEquals($expectedRegistrarServer, $data->registrarResponse?->server);
+        if (null === $expectedRegistrarResponse) {
+            self::assertNull($data->registrarResponse?->response);
+        } else {
+            self::assertStringContainsString($expectedRegistrarResponse, $data->registrarResponse?->response);
+        }
+    }
+
+    public static function getRdapDomainResponse(): \Generator
     {
-        $serverList = new TldServerList();
-        $serverList->serverDefault = new Server('https://rdap.iana.org', ServerTypeEnum::RDAP);
+        yield ['ru', self::createRdapTldServerList()->serverDefault, '"Coordination Center for TLD RU"', null, null];
+        yield ['google.com', 'https://rdap.verisign.com/com/v1/', '"handle":"2138514_DOMAIN_COM-VRSN","ldhName":"GOOGLE.COM"', 'https://rdap.markmonitor.com/rdap/domain/', null]; // todo
+        yield ['registro.br', 'https://rdap.registro.br/', 'Núcleo de Inf. e Coord. do Ponto BR - NIC.BR', null, null];
+        yield ['я.рус', 'https://api.rdap.nic.xn--p1acf/', '"handle":"8144-CoCCA","ldhName":"xn--41a.xn--p1acf"', null, null]; // punycode
+    }
+
+    private static function createRdapTldServerList(): RdapTldServerList
+    {
+        $serverList = new RdapTldServerList();
+        $serverList->serverDefault = 'https://rdap.iana.org';
         $serverList->servers = [
-            '.com' => new Server('whois.verisign-grs.com', ServerTypeEnum::WHOIS),
-            '.ru' => new Server('whois.tcinet.ru', ServerTypeEnum::WHOIS),
-            '.org.ru' => new Server('whois.nic.ru', ServerTypeEnum::WHOIS),
-            '.br' => new Server('whois.registro.br', ServerTypeEnum::WHOIS),
-            '.tjmaxx' => new Server('https://rdap.nic.tjmaxx/', ServerTypeEnum::RDAP),
-            '.xn--p1ai' => new Server('whois.tcinet.ru', ServerTypeEnum::WHOIS),
+            '.com' => 'https://rdap.verisign.com/com/v1/',
+            '.org.ru' => 'https://www.nic.ru/rdap/',
+            '.br' => 'https://rdap.registro.br/',
+            '.xn--p1acf' => 'https://api.rdap.nic.xn--p1acf/', // .рус
+        ];
+
+        return $serverList;
+    }
+
+    private static function createWhoisTldServerList(): WhoisTldServerList
+    {
+        $serverList = new WhoisTldServerList();
+        $serverList->serverDefault = 'whois.iana.org';
+        $serverList->servers = [
+            '.com' => 'whois.verisign-grs.com',
+            '.ru' => 'whois.tcinet.ru',
+            '.org.ru' => 'whois.nic.ru',
+            '.br' => 'whois.registro.br', // non UTF-8
+            '.xn--p1ai' => 'whois.tcinet.ru', // .рф
         ];
 
         return $serverList;

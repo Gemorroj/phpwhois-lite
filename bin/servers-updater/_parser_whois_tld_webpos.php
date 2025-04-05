@@ -23,10 +23,7 @@ foreach ($data as $tld => $value) {
         continue;
     }
 
-    $servers['.'.$tld] = [
-        'type' => 'whois',
-        'server' => $server,
-    ];
+    $servers['.'.$tld] = $server;
 }
 echo 'End scan domains.'.\PHP_EOL;
 echo 'Disconnect from '.$host.'...'.\PHP_EOL;

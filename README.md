@@ -11,7 +11,7 @@
 - Force custom WHOIS/RDAP server
 
 ### Requirements:
-- PHP >= 8.2
+- PHP >= 8.4
 - ext-curl
 
 ### Installation:
@@ -25,8 +25,8 @@ composer require gemorroj/whordap
 <?php
 use WhoRdap\NetworkClient\NetworkClient;
 use WhoRdap\WhoRdap;
-use WhoRdap\Response\DomainRegistrarResponse;
-use WhoRdap\Response\DomainResponse;
+use WhoRdap\Response\WhoisDomainRegistrarResponse;
+use WhoRdap\Response\WhoisDomainResponse;
 use Psr\Log\NullLogger;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 
@@ -35,63 +35,35 @@ $cache = new FilesystemAdapter('whordap', 60); // install symfony/cache
 
 $networkClient = new NetworkClient(cache: $cache, logger: $logger);
 $whois = new WhoRdap($networkClient);
-// $data = $whois->process('ru');
-// $data = $whois->process('127.0.0.1');
-// $data = $whois->process('192.168.0.0/24'); // CIDR
-// $data = $whois->process('2001:0db8:85a3:0000:0000:8a2e:0370:7334');
-// $data = $whois->process('AS220');
-// $data = $whois->process('sirus.su', WhoisServer('whois.tcinet.ru', ServerTypeEnum::WHOIS)); // custom WHOIS server
-// $data = $whois->process('sirus.su', WhoisServer('https://www.nic.ru/rdap', ServerTypeEnum::RDAP)); // custom RDAP server
-$data = $whois->process('vk.com');
-$actualResponse = $data instanceof DomainResponse && $data->registrarResponse instanceof DomainRegistrarResponse ? $data->registrarResponse : $data;
-// echo $actualResponse->getResponseAsString();
+// $data = $whois->processWhois('ru');
+// $data = $whois->processRdap('ru');
+// $data = $whois->processWhois('127.0.0.1');
+// $data = $whois->processWhois('192.168.0.0/24'); // CIDR
+// $data = $whois->processWhois('2001:0db8:85a3:0000:0000:8a2e:0370:7334');
+// $data = $whois->processWhois('AS220');
+// $data = $whois->processWhois('sirus.su', 'whois.tcinet.ru'); // custom WHOIS server
+// $data = $whois->processRdap('sirus.su', 'https://www.nic.ru/rdap'); // custom RDAP server
+$data = $whois->processWhois('vk.com');
+$actualResponse = $data instanceof WhoisDomainResponse && $data->registrarResponse instanceof WhoisDomainRegistrarResponse ? $data->registrarResponse : $data;
+// echo $actualResponse->response;
 
 print_r($data);
 /*
-WhoRdap\Response\DomainResponse Object
+WhoRdap\Response\WhoisDomainResponse Object
 (
-    [response] => WhoRdap\NetworkClient\WhoisResponse Object
-        (
-            [data] => Domain Name: VK.COM
+    [response] => Domain Name: VK.COM
    Registry Domain ID: 3206186_DOMAIN_COM-VRSN
    Registrar WHOIS Server: whois.nic.ru
 ...
-        )
-
-    [server] => WhoRdap\Resource\Server Object
+    [server] => whois.verisign-grs.com
+    [registrarResponse] => WhoRdap\Response\WhoisDomainRegistrarResponse Object
         (
-            [server] => whois.verisign-grs.com
-            [type] => WhoRdap\Resource\ServerTypeEnum Enum:string
-                (
-                    [name] => WHOIS
-                    [value] => whois
-                )
-
-        )
-
-    [registrarResponse] => WhoRdap\Response\DomainRegistrarResponse Object
-        (
-            [response] => WhoRdap\NetworkClient\WhoisResponse Object
-                (
-                    [data] => Domain Name: VK.COM
+            [response] => Domain Name: VK.COM
 Registry Domain ID: 3206186_DOMAIN_COM-VRSN
 Registrar WHOIS Server: whois.nic.ru
 ...
-                )
-
-            [server] => WhoRdap\Resource\Server Object
-                (
-                    [server] => whois.nic.ru
-                    [type] => WhoRdap\Resource\ServerTypeEnum Enum:string
-                        (
-                            [name] => WHOIS
-                            [value] => whois
-                        )
-
-                )
-
+            [server] => whois.nic.ru
         )
-
 )
  */
 ```
@@ -99,9 +71,12 @@ Registrar WHOIS Server: whois.nic.ru
 ### Notes:
 - update WHOIS/RDAP servers:
   - ```shell
-    php bin/asn-servers-updater.php
-    php bin/ip-servers-updater.php
-    php bin/tld-servers-updater.php
+    php bin/rdap-asn-servers-updater.php
+    php bin/rdap-ip-servers-updater.php
+    php bin/rdap-tld-servers-updater.php
+    php bin/whois-asn-servers-updater.php
+    php bin/whois-ip-servers-updater.php
+    php bin/whois-tld-servers-updater.php
     ```
 - https://github.com/weppos/whois/tree/main/data
 - https://habr.com/ru/articles/165869/

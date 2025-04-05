@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace WhoRdap;
 
-use WhoRdap\NetworkClient\RdapResponse;
-use WhoRdap\NetworkClient\WhoisResponse;
-use WhoRdap\Resource\Server;
-
 interface NetworkClientInterface
 {
-    public function getResponse(Server $server, string $query): RdapResponse|WhoisResponse;
+    public function getWhoisResponse(string $server, string $query): string;
+
+    public function getRdapResponse(string $server, string $query): string;
 }

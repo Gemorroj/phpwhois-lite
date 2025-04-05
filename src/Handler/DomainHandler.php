@@ -8,7 +8,10 @@ use Algo26\IdnaConvert\Exception\AlreadyPunycodeException;
 use Algo26\IdnaConvert\Exception\InvalidCharacterException as Algo26InvalidCharacterException;
 use Algo26\IdnaConvert\ToIdn;
 use Psr\Cache\InvalidArgumentException;
+use WhoRdap\Exception\HttpException;
 use WhoRdap\Exception\InvalidCharacterException;
+use WhoRdap\Exception\InvalidRdapServerException;
+use WhoRdap\Exception\InvalidResponseException;
 use WhoRdap\Exception\InvalidWhoisServerException;
 use WhoRdap\Exception\NetworkException;
 use WhoRdap\Exception\QueryRateLimitExceededException;
@@ -16,29 +19,26 @@ use WhoRdap\Exception\RegistrarServerException;
 use WhoRdap\Exception\TimeoutException;
 use WhoRdap\HandlerInterface;
 use WhoRdap\NetworkClient\NetworkClient;
-use WhoRdap\NetworkClient\RdapResponse;
-use WhoRdap\NetworkClient\WhoisResponse;
-use WhoRdap\Resource\Server;
-use WhoRdap\Resource\ServerTypeEnum;
-use WhoRdap\Resource\TldServerList;
-use WhoRdap\Response\DomainRegistrarResponse;
-use WhoRdap\Response\DomainResponse;
+use WhoRdap\Response\RdapDomainRegistrarResponse;
+use WhoRdap\Response\RdapDomainResponse;
+use WhoRdap\Response\WhoisDomainRegistrarResponse;
+use WhoRdap\Response\WhoisDomainResponse;
+use WhoRdap\TldServerListInterface;
 
 final readonly class DomainHandler implements HandlerInterface
 {
-    public function __construct(private NetworkClient $networkClient, private TldServerList $serverList = new TldServerList())
+    public function __construct(private NetworkClient $networkClient, private TldServerListInterface $serverList)
     {
     }
 
     /**
+     * @throws QueryRateLimitExceededException
      * @throws InvalidArgumentException
      * @throws InvalidCharacterException
-     * @throws QueryRateLimitExceededException
-     * @throws TimeoutException
      * @throws NetworkException
-     * @throws \JsonException
+     * @throws TimeoutException
      */
-    public function process(string $query, ?Server $forceServer = null): DomainResponse
+    public function processWhois(string $query, ?string $forceServer = null): WhoisDomainResponse
     {
         try {
             $query = (new ToIdn())->convert($query);
@@ -50,31 +50,74 @@ final readonly class DomainHandler implements HandlerInterface
 
         $server = $forceServer ?? $this->findTldServer($query);
 
-        $q = $this->prepareServerQuery($server, $query);
-        $response = $this->networkClient->getResponse($server, $q);
+        $q = $this->prepareWhoisServerQuery($server, $query);
+        $response = $this->networkClient->getWhoisResponse($server, $q);
         $domainRegistrarResponse = null;
 
         if (!$forceServer) {
-            $registrarServer = $this->findRegistrarServer($response);
-            if ($registrarServer && !$registrarServer->isEqual($server)) {
-                $q = $this->prepareServerQuery($registrarServer, $query);
+            $registrarServer = $this->findWhoisRegistrarServer($response);
+            if ($registrarServer && $registrarServer !== $server) {
+                $q = $this->prepareWhoisServerQuery($registrarServer, $query);
                 try {
-                    $registrarResponse = $this->networkClient->getResponse($registrarServer, $q);
-                    $domainRegistrarResponse = new DomainRegistrarResponse($registrarResponse, $registrarServer);
+                    $registrarResponse = $this->networkClient->getWhoisResponse($registrarServer, $q);
+                    $domainRegistrarResponse = new WhoisDomainRegistrarResponse($registrarResponse, $registrarServer);
                 } catch (\Exception $e) {
                     $domainRegistrarResponse = new RegistrarServerException('Can\'t load info from registrar server.', previous: $e);
                 }
             }
         }
 
-        return new DomainResponse(
+        return new WhoisDomainResponse(
             $response,
             $server,
             $domainRegistrarResponse,
         );
     }
 
-    private function findTldServer(string $query): Server
+    /**
+     * @throws InvalidResponseException
+     * @throws InvalidCharacterException
+     * @throws HttpException
+     * @throws InvalidArgumentException
+     * @throws NetworkException
+     */
+    public function processRdap(string $query, ?string $forceServer = null): RdapDomainResponse
+    {
+        try {
+            $query = (new ToIdn())->convert($query);
+        } catch (AlreadyPunycodeException) {
+            // $query is already a Punycode
+        } catch (Algo26InvalidCharacterException $e) {
+            throw new InvalidCharacterException('Invalid query: '.$query, previous: $e);
+        }
+
+        $server = $forceServer ?? $this->findTldServer($query);
+
+        $q = $this->prepareRdapServerQuery($server, $query);
+        $response = $this->networkClient->getRdapResponse($server, $q);
+        $domainRegistrarResponse = null;
+
+        if (!$forceServer) {
+            $registrarServer = $this->findRdapRegistrarServer($response);
+            if ($registrarServer && $registrarServer !== $server) {
+                $q = $this->prepareRdapServerQuery($registrarServer, $query);
+                try {
+                    $registrarResponse = $this->networkClient->getRdapResponse($registrarServer, $q);
+                    $domainRegistrarResponse = new RdapDomainRegistrarResponse($registrarResponse, $registrarServer);
+                } catch (\Exception $e) {
+                    $domainRegistrarResponse = new RegistrarServerException('Can\'t load info from registrar server.', previous: $e);
+                }
+            }
+        }
+
+        return new RdapDomainResponse(
+            $response,
+            $server,
+            $domainRegistrarResponse,
+        );
+    }
+
+    private function findTldServer(string $query): string
     {
         if (0 === \substr_count($query, '.')) {
             return $this->serverList->serverDefault;
@@ -98,42 +141,50 @@ final readonly class DomainHandler implements HandlerInterface
         return $this->serverList->serverDefault;
     }
 
-    private function prepareServerQuery(Server $server, string $query): string
+    private function prepareWhoisServerQuery(string $server, string $query): string
     {
-        if (ServerTypeEnum::RDAP === $server->type) {
-            return '/domain/'.$query;
-        }
-
         return $query;
     }
 
-    private function findRegistrarServer(RdapResponse|WhoisResponse $response): ?Server
+    private function prepareRdapServerQuery(string $server, string $query): string
     {
-        // https://rdap.verisign.com/com/v1/domain/vk.com
-        if ($response instanceof RdapResponse) {
-            // https://datatracker.ietf.org/doc/html/rfc9083#name-links
-            $links = $response->data['links'] ?? [];
-            foreach ($links as $link) {
-                if ($link['href'] && 'related' === $link['rel'] && 'application/rdap+json' === $link['type']) {
-                    $href = \strtolower($link['href']);
-                    $posDomain = \strpos($href, '/domain/');
-                    if (false !== $posDomain) {
-                        $href = \substr($href, 0, $posDomain);
-                    }
+        return '/domain/'.$query;
+    }
 
-                    return new Server($href, ServerTypeEnum::RDAP);
-                }
-            }
-            // https://datatracker.ietf.org/doc/html/rfc9083#section-4.7
-            /*if (isset($response->data['port43'])) {
-                return new Server($response->data['port43'], ServerTypeEnum::WHOIS);
-            }*/
-
+    private function findRdapRegistrarServer(string $response): ?string
+    {
+        try {
+            $json = \json_decode($response, true, 512, \JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
             return null;
         }
 
+        // https://rdap.verisign.com/com/v1/domain/vk.com
+        // https://datatracker.ietf.org/doc/html/rfc9083#name-links
+        $links = $json['links'] ?? [];
+        foreach ($links as $link) {
+            if ($link['href'] && 'related' === $link['rel'] && 'application/rdap+json' === $link['type']) {
+                $href = \strtolower($link['href']);
+                $posDomain = \strpos($href, '/domain/');
+                if (false !== $posDomain) {
+                    $href = \substr($href, 0, $posDomain + 1);
+                }
+
+                try {
+                    return $this->prepareRdapServer($href);
+                } catch (InvalidRdapServerException) {
+                    return null;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function findWhoisRegistrarServer(string $response): ?string
+    {
         $matches = [];
-        if (\preg_match('/Registrar WHOIS Server:(.+)/i', $response->data, $matches)) {
+        if (\preg_match('/Registrar WHOIS Server:(.+)/i', $response, $matches)) {
             $server = \trim($matches[1]);
             if ('' === $server) {
                 return null;
@@ -152,7 +203,7 @@ final readonly class DomainHandler implements HandlerInterface
     /**
      * @throws InvalidWhoisServerException
      */
-    private function prepareWhoisServer(string $whoisServer): Server
+    private function prepareWhoisServer(string $whoisServer): string
     {
         $whoisServer = \strtolower($whoisServer);
 
@@ -175,9 +226,26 @@ final readonly class DomainHandler implements HandlerInterface
             }
         }
 
-        return new Server(
-            $whoisServer,
-            ServerTypeEnum::WHOIS,
-        );
+        return $whoisServer;
+    }
+
+    /**
+     * @throws InvalidRdapServerException
+     */
+    private function prepareRdapServer(string $rdapServer): string
+    {
+        $rdapServer = \strtolower($rdapServer);
+
+        $parsedRdapServer = \parse_url($rdapServer);
+        if (!isset($parsedRdapServer['scheme'])) {
+            throw new InvalidRdapServerException('Invalid RDAP server path.');
+        }
+
+        if (!\in_array($parsedRdapServer['scheme'], ['http', 'https'], true)) {
+            // something strange path. /passwd for example
+            throw new InvalidRdapServerException('Invalid RDAP server scheme. Must be HTTP or HTTPS.');
+        }
+
+        return $rdapServer;
     }
 }

@@ -5,43 +5,62 @@ declare(strict_types=1);
 namespace WhoRdap\Handler;
 
 use Psr\Cache\InvalidArgumentException;
+use WhoRdap\AsnServerListInterface;
+use WhoRdap\Exception\HttpException;
+use WhoRdap\Exception\InvalidResponseException;
 use WhoRdap\Exception\NetworkException;
 use WhoRdap\Exception\QueryRateLimitExceededException;
 use WhoRdap\Exception\TimeoutException;
 use WhoRdap\HandlerInterface;
 use WhoRdap\NetworkClient\NetworkClient;
-use WhoRdap\Resource\AsnServerList;
-use WhoRdap\Resource\Server;
-use WhoRdap\Resource\ServerTypeEnum;
-use WhoRdap\Response\AsnResponse;
+use WhoRdap\Response\RdapAsnResponse;
+use WhoRdap\Response\WhoisAsnResponse;
 
 final readonly class AsnHandler implements HandlerInterface
 {
-    public function __construct(private NetworkClient $networkClient, private AsnServerList $serverList = new AsnServerList())
+    public function __construct(private NetworkClient $networkClient, private AsnServerListInterface $serverList)
     {
     }
 
     /**
-     * @throws InvalidArgumentException
-     * @throws TimeoutException
      * @throws QueryRateLimitExceededException
+     * @throws InvalidArgumentException
      * @throws NetworkException
-     * @throws \JsonException
+     * @throws TimeoutException
      */
-    public function process(string $query, ?Server $forceServer = null): AsnResponse
+    public function processWhois(string $query, ?string $forceServer = null): WhoisAsnResponse
     {
         $server = $forceServer ?? $this->findAsnServer($query);
 
-        $q = $this->prepareServerQuery($server, $query);
-        $response = $this->networkClient->getResponse($server, $q);
+        $q = $this->prepareWhoisServerQuery($server, $query);
+        $response = $this->networkClient->getWhoisResponse($server, $q);
 
-        return new AsnResponse(
+        return new WhoisAsnResponse(
             $response,
             $server,
         );
     }
 
-    private function findAsnServer(string $query): Server
+    /**
+     * @throws InvalidResponseException
+     * @throws InvalidArgumentException
+     * @throws HttpException
+     * @throws NetworkException
+     */
+    public function processRdap(string $query, ?string $forceServer = null): RdapAsnResponse
+    {
+        $server = $forceServer ?? $this->findAsnServer($query);
+
+        $q = $this->prepareRdapServerQuery($server, $query);
+        $response = $this->networkClient->getRdapResponse($server, $q);
+
+        return new RdapAsnResponse(
+            $response,
+            $server,
+        );
+    }
+
+    private function findAsnServer(string $query): string
     {
         $hasAsPrefix = false !== \stripos($query, 'AS');
         $number = $hasAsPrefix ? \substr($query, 2) : $query;
@@ -62,19 +81,26 @@ final readonly class AsnHandler implements HandlerInterface
         return $this->serverList->serverDefault;
     }
 
-    private function prepareServerQuery(Server $server, string $query): string
+    private function prepareWhoisServerQuery(string $server, string $query): string
     {
-        if (ServerTypeEnum::RDAP === $server->type) {
-            $hasAsPrefix = false !== \stripos($query, 'AS');
-
-            return '/autnum/'.($hasAsPrefix ? \substr($query, 2) : $query);
-        }
-        if (ServerTypeEnum::WHOIS === $server->type && \in_array($server->server, ['whois.arin.net', 'whois.arin.net:43'], true)) {
+        if (\in_array($server, ['whois.arin.net', 'whois.arin.net:43'], true)) {
             $hasAsPrefix = false !== \stripos($query, 'AS');
 
             return $hasAsPrefix ? 'z '.\substr($query, 2) : 'z '.$query;
         }
+        if (\in_array($server, ['whois.afrinic.net', 'whois.afrinic.net:43', 'whois.apnic.net', 'whois.apnic.net:43', 'whois.ripe.net', 'whois.ripe.net:43'], true)) {
+            $hasAsPrefix = false !== \stripos($query, 'AS');
+
+            return $hasAsPrefix ? $query : 'AS'.$query;
+        }
 
         return $query;
+    }
+
+    private function prepareRdapServerQuery(string $server, string $query): string
+    {
+        $hasAsPrefix = false !== \stripos($query, 'AS');
+
+        return '/autnum/'.($hasAsPrefix ? \substr($query, 2) : $query);
     }
 }

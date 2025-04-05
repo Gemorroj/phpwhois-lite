@@ -29,21 +29,12 @@ foreach ($matches as $match) {
     $matchesPageWhois = [];
     \preg_match('/<b>WHOIS Server:<\/b>(.+)<br>/', $domainPage, $matchesPageWhois);
     $server = isset($matchesPageWhois[1]) ? \trim($matchesPageWhois[1]) : null;
-    $type = 'whois'; // prefer whois. https://www.nic.ru/rdap/domain/vk.com зачем-то поставили защиту от роботов, что убивает смысл RDAP сервера
     if (!$server) {
-        \preg_match('/<b>RDAP Server: <\/b>(.+)/', $domainPage, $matchesPageRdap);
-        $server = isset($matchesPageRdap[1]) ? \trim($matchesPageRdap[1]) : null;
-        $type = 'rdap';
-        if (!$server) {
-            echo 'Warning: WHOIS/RDAP Server for "'.$tld.'" on page "'.$host.$urlPage.'" not found...'.\PHP_EOL;
-            continue;
-        }
+        echo 'Warning: WHOIS/RDAP Server for "'.$tld.'" on page "'.$host.$urlPage.'" not found...'.\PHP_EOL;
+        continue;
     }
 
-    $servers[$tld] = [
-        'type' => $type,
-        'server' => $server,
-    ];
+    $servers[$tld] = $server;
 }
 echo 'End scan domains.'.\PHP_EOL;
 echo 'Disconnect from '.$host.'...'.\PHP_EOL;

@@ -8,12 +8,11 @@ use Psr\Cache\CacheItemPoolInterface;
 use Psr\Cache\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 use WhoRdap\Exception\HttpException;
+use WhoRdap\Exception\InvalidResponseException;
 use WhoRdap\Exception\NetworkException;
 use WhoRdap\Exception\QueryRateLimitExceededException;
 use WhoRdap\Exception\TimeoutException;
 use WhoRdap\NetworkClientInterface;
-use WhoRdap\Resource\Server;
-use WhoRdap\Resource\ServerTypeEnum;
 
 readonly class NetworkClient implements NetworkClientInterface
 {
@@ -27,33 +26,28 @@ readonly class NetworkClient implements NetworkClientInterface
     }
 
     /**
-     * @throws InvalidArgumentException
      * @throws QueryRateLimitExceededException
-     * @throws TimeoutException
+     * @throws InvalidArgumentException
      * @throws NetworkException
-     * @throws \JsonException
+     * @throws TimeoutException
      */
-    public function getResponse(Server $server, string $query): RdapResponse|WhoisResponse
+    public function getWhoisResponse(string $server, string $query): string
     {
         $cacheItem = null;
         if ($this->cache) {
-            $cacheKey = $this->makeCacheKey($server->server, $server->type->value, $query);
+            $cacheKey = $this->makeCacheKey($server, $query);
             $cacheItem = $this->cache->getItem($cacheKey);
             if ($cacheItem->isHit()) {
-                $this->logger?->debug("Load cached data for $server->server -> $query");
+                $this->logger?->debug("Load cached data for $server -> $query");
 
                 return $cacheItem->get();
             }
         }
 
-        if (ServerTypeEnum::RDAP === $server->type) {
-            $response = $this->rdapRequest($server, $query);
-        } else {
-            $response = $this->whoisRequest($server, $query);
-        }
+        $response = $this->whoisRequest($server, $query);
 
-        if ($this->isQueryRateLimitExceeded($response)) {
-            throw QueryRateLimitExceededException::create($server->server);
+        if ($this->isWhoisQueryRateLimitExceeded($response)) {
+            throw QueryRateLimitExceededException::create($server);
         }
 
         if ($cacheItem) {
@@ -65,34 +59,59 @@ readonly class NetworkClient implements NetworkClientInterface
         return $response;
     }
 
-    protected function isQueryRateLimitExceeded(RdapResponse|WhoisResponse $response): bool
+    /**
+     * @throws InvalidResponseException
+     * @throws InvalidArgumentException
+     * @throws HttpException
+     * @throws NetworkException
+     */
+    public function getRdapResponse(string $server, string $query): string
     {
-        if ($response instanceof WhoisResponse) {
-            $stings = [
-                'Query rate limit exceeded',
-                'You have exceeded this limit',
-                'Lookup quota exceeded',
-                'WHOIS LIMIT EXCEEDED',
-                'Excessive querying, grace period of',
-                'Query limitation is',
-                'exceeded allowed connection rate',
-                'too many requests',
-                'and will be replenished',
-                'contained within a list of IP addresses that may have failed',
-                'You exceeded the maximum',
-                'Maximum Daily connection limit reached',
-                'exceeded maximum connection limit',
-                'Still in grace period, wait',
-                'Query rate of ',
-            ];
-            foreach ($stings as $sting) {
-                if (\str_contains($response->data, $sting)) {
-                    return true;
-                }
+        $cacheItem = null;
+        if ($this->cache) {
+            $cacheKey = $this->makeCacheKey($server, $query);
+            $cacheItem = $this->cache->getItem($cacheKey);
+            if ($cacheItem->isHit()) {
+                $this->logger?->debug("Load cached data for $server -> $query");
+
+                return $cacheItem->get();
             }
         }
 
-        return false;
+        $response = $this->rdapRequest($server, $query);
+
+        if ($cacheItem) {
+            $this->logger?->debug('Save cache');
+            $cacheItem->set($response);
+            $this->cache->save($cacheItem);
+        }
+
+        return $response;
+    }
+
+    protected function isWhoisQueryRateLimitExceeded(string $response): bool
+    {
+        $stings = [
+            'Query rate limit exceeded',
+            'You have exceeded this limit',
+            'Lookup quota exceeded',
+            'WHOIS LIMIT EXCEEDED',
+            'Excessive querying, grace period of',
+            'Query limitation is',
+            'exceeded allowed connection rate',
+            'too many requests',
+            'and will be replenished',
+            'contained within a list of IP addresses that may have failed',
+            'You exceeded the maximum',
+            'Maximum Daily connection limit reached',
+            'exceeded maximum connection limit',
+            'Still in grace period, wait',
+            'Query rate of ',
+        ];
+
+        return \array_any($stings, static function (string $value) use ($response): bool {
+            return \str_contains($response, $value);
+        });
     }
 
     protected function convertToUtf8(string $raw): string
@@ -107,16 +126,17 @@ readonly class NetworkClient implements NetworkClientInterface
 
     /**
      * @throws NetworkException
-     * @throws \JsonException
+     * @throws InvalidResponseException
+     * @throws HttpException
      */
-    protected function rdapRequest(Server $server, string $query): RdapResponse
+    protected function rdapRequest(string $server, string $query): string
     {
-        $url = \rtrim($server->server, '/').$query;
+        $url = \rtrim($server, '/').$query;
         $this->logger?->debug("Initialize CURL connection to HTTP server: $url");
         $fp = \curl_init($url);
         if (!$fp) {
-            $this->logger?->debug("Can't init CURL connection to HTTP server: $server->server");
-            throw new NetworkException("Can't init CURL connection to HTTP server: $server->server");
+            $this->logger?->debug("Can't init CURL connection to HTTP server: $server");
+            throw new NetworkException("Can't init CURL connection to HTTP server: $server");
         }
         \curl_setopt($fp, \CURLOPT_ENCODING, '');
         \curl_setopt($fp, \CURLOPT_RETURNTRANSFER, true);
@@ -130,7 +150,7 @@ readonly class NetworkClient implements NetworkClientInterface
         $this->logger?->debug('Execute request to HTTP server...');
         $raw = \curl_exec($fp);
         if (false === $raw) {
-            $this->logger?->debug("Can't request to HTTP server: $server->server");
+            $this->logger?->debug("Can't request to HTTP server: $server");
             throw new NetworkException(\curl_error($fp), \curl_errno($fp));
         }
 
@@ -144,25 +164,28 @@ readonly class NetworkClient implements NetworkClientInterface
             throw HttpException::create($httpCode, $raw);
         }
 
-        $json = \json_decode($raw, true, 512, \JSON_THROW_ON_ERROR);
+        if (!\json_validate($raw)) {
+            $this->logger?->debug("Invalid JSON response: $server");
+            throw new InvalidResponseException('Invalid RDAP response. Is not valid JSON.', $raw);
+        }
 
-        return new RdapResponse($json);
+        return $raw;
     }
 
     /**
-     * @throws TimeoutException
      * @throws NetworkException
+     * @throws TimeoutException
      */
-    protected function whoisRequest(Server $server, string $query): WhoisResponse
+    protected function whoisRequest(string $server, string $query): string
     {
-        $parts = \explode(':', $server->server, 2);
+        $parts = \explode(':', $server, 2);
         $host = $parts[0];
         $port = (int) ($parts[1] ?? 43);
 
-        $this->logger?->debug("Open connection to WHOIS server: $server->server");
+        $this->logger?->debug("Open connection to WHOIS server: $server");
         $ptr = @\fsockopen($host, $port, $errno, $errstr, $this->timeout);
         if (!$ptr) {
-            $this->logger?->debug("Can't connect to WHOIS server: $server->server");
+            $this->logger?->debug("Can't connect to WHOIS server: $server");
             throw new NetworkException($errstr, $errno);
         }
 
@@ -172,7 +195,7 @@ readonly class NetworkClient implements NetworkClientInterface
         $this->logger?->debug("Write data \"$query\" to WHOIS server...");
         $write = \fwrite($ptr, $query."\r\n");
         if (false === $write) {
-            $this->logger?->debug("Can't write data to WHOIS $server->server");
+            $this->logger?->debug("Can't write data to WHOIS $server");
             $error = \error_get_last();
             throw new NetworkException($error['message']);
         }
@@ -191,19 +214,19 @@ readonly class NetworkClient implements NetworkClientInterface
                 }
 
                 if (\time() - $startTime > $this->timeout) {
-                    $this->logger?->debug('Timeout reading from WHOIS server: '.$server->server);
+                    $this->logger?->debug('Timeout reading from WHOIS server: '.$server);
                     $this->logger?->debug('Close connection');
                     @\fclose($ptr);
-                    throw new TimeoutException('Timeout reading from WHOIS server: '.$server->server);
+                    throw new TimeoutException('Timeout reading from WHOIS server: '.$server);
                 }
             }
         }
 
         if ('' === $raw) {
-            $this->logger?->debug('Empty data from WHOIS server: '.$server->server);
+            $this->logger?->debug('Empty data from WHOIS server: '.$server);
             $this->logger?->debug('Close connection');
             @\fclose($ptr);
-            throw new NetworkException('Empty data from WHOIS server: '.$server->server);
+            throw new NetworkException('Empty data from WHOIS server: '.$server);
         }
 
         $this->logger?->debug($raw);
@@ -214,6 +237,6 @@ readonly class NetworkClient implements NetworkClientInterface
         $raw = $this->convertToUtf8($raw);
         $raw = \mb_trim($raw);
 
-        return new WhoisResponse($raw);
+        return $raw;
     }
 }

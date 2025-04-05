@@ -9,35 +9,32 @@ declare(strict_types=1);
 
 namespace WhoRdap\Resource;
 
-class AsnServerList
+use WhoRdap\AsnServerListInterface;
+
+class RdapAsnServerList implements AsnServerListInterface
 {
-    public Server $serverDefault;
+    public string $serverDefault;
     /**
-     * @var array<string|int, Server>
+     * @var array<string|int, string>
      */
     public array $servers;
 
     public function __construct()
     {
-        $this->serverDefault = new Server(\'https://rdap.arin.net/registry\', ServerTypeEnum::RDAP);
+        $this->serverDefault = \'https://rdap.arin.net/registry\';
         $this->servers = [];
     }
 }';
 
-$writePath = __DIR__.'/../src/Resource/AsnServerList.php';
+$writePath = __DIR__.'/../src/Resource/RdapAsnServerList.php';
 $startTime = \microtime(true);
 
-$asnServers = require __DIR__.'/servers-updater/_parser_asn_iana.php';
+$asnServers = require __DIR__.'/servers-updater/_parser_rdap_asn_iana.php';
 $count = \count($asnServers);
 
 $templatedAsnServers = [];
-foreach ($asnServers as $asn => $value) {
-    $type = match ($value['type']) {
-        'whois' => 'ServerTypeEnum::WHOIS',
-        'rdap' => 'ServerTypeEnum::RDAP',
-    };
-
-    $templatedAsnServers[] = \sprintf("'%s' => new Server('%s', %s),", $asn, $value['server'], $type);
+foreach ($asnServers as $asn => $server) {
+    $templatedAsnServers[] = \sprintf("'%s' => '%s',", $asn, $server);
 }
 
 $templatedAsnServersStr = '$this->servers = ['."\n".\implode("\n", $templatedAsnServers)."\n];";
@@ -51,6 +48,6 @@ if (false === $write) {
 $endTime = \microtime(true);
 $time = \round($endTime - $startTime, 2).' seconds';
 
-echo 'WHOIS/RDAP servers updated. Now: '.$count.' servers'.\PHP_EOL;
+echo 'RDAP servers updated. Now: '.$count.' servers'.\PHP_EOL;
 echo 'Spent time: '.$time.\PHP_EOL;
 echo 'Don\'t forget run php-cs-fixer'.\PHP_EOL;

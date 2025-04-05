@@ -9,52 +9,44 @@ declare(strict_types=1);
 
 namespace WhoRdap\Resource;
 
-class IpServerList
+use WhoRdap\IpServerListInterface;
+
+class RdapIpServerList implements IpServerListInterface
 {
-    public Server $serverDefault;
+    public string $serverDefault;
     /**
-     * @var array<string, Server>
+     * @var array<string, string>
      */
     public array $serversIpv4;
         /**
-     * @var array<string, Server>
+     * @var array<string, string>
      */
     public array $serversIpv6;
 
     public function __construct()
     {
-        $this->serverDefault = new Server(\'https://rdap.arin.net/registry\', ServerTypeEnum::RDAP);
+        $this->serverDefault = \'https://rdap.arin.net/registry\';
         $this->serversIpv4 = [];
         $this->serversIpv6 = [];
     }
 }';
 
-$writePath = __DIR__.'/../src/Resource/IpServerList.php';
+$writePath = __DIR__.'/../src/Resource/RdapIpServerList.php';
 $startTime = \microtime(true);
 
-$ipv4Servers = require __DIR__.'/servers-updater/_parser_ipv4_iana.php';
-$ipv6Servers = require __DIR__.'/servers-updater/_parser_ipv6_iana.php';
+$ipv4Servers = require __DIR__.'/servers-updater/_parser_rdap_ipv4_iana.php';
+$ipv6Servers = require __DIR__.'/servers-updater/_parser_rdap_ipv6_iana.php';
 
 $countIpv4 = \count($ipv4Servers);
 $countIpv6 = \count($ipv6Servers);
 
 $templatedIpv4Servers = [];
-foreach ($ipv4Servers as $ipv4 => $value) {
-    $type = match ($value['type']) {
-        'whois' => 'ServerTypeEnum::WHOIS',
-        'rdap' => 'ServerTypeEnum::RDAP',
-    };
-
-    $templatedIpv4Servers[] = \sprintf("'%s' => new Server('%s', %s),", $ipv4, $value['server'], $type);
+foreach ($ipv4Servers as $ipv4 => $server) {
+    $templatedIpv4Servers[] = \sprintf("'%s' => '%s',", $ipv4, $server);
 }
 $templatedIpv6Servers = [];
-foreach ($ipv6Servers as $ipv6 => $value) {
-    $type = match ($value['type']) {
-        'whois' => 'ServerTypeEnum::WHOIS',
-        'rdap' => 'ServerTypeEnum::RDAP',
-    };
-
-    $templatedIpv6Servers[] = \sprintf("'%s' => new Server('%s', %s),", $ipv6, $value['server'], $type);
+foreach ($ipv6Servers as $ipv6 => $server) {
+    $templatedIpv6Servers[] = \sprintf("'%s' => '%s',", $ipv6, $server);
 }
 
 $templatedIpv4ServersStr = '$this->serversIpv4 = ['."\n".\implode("\n", $templatedIpv4Servers)."\n];";
@@ -71,6 +63,6 @@ if (false === $write) {
 $endTime = \microtime(true);
 $time = \round($endTime - $startTime, 2).' seconds';
 
-echo 'WHOIS/RDAP servers updated. Now: '.$countIpv4.' Ipv4 and '.$countIpv6.' IPv6 servers'.\PHP_EOL;
+echo 'RDAP servers updated. Now: '.$countIpv4.' Ipv4 and '.$countIpv6.' IPv6 servers'.\PHP_EOL;
 echo 'Spent time: '.$time.\PHP_EOL;
 echo 'Don\'t forget run php-cs-fixer'.\PHP_EOL;

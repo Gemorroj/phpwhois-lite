@@ -41,16 +41,12 @@ foreach ($matches as $match) {
 
     $server = $matchesPage[1];
     $server = \htmlspecialchars_decode($server);
-    $type = 'whois';
     if (\str_starts_with($server, 'http://') || \str_starts_with($server, 'https://')) {
         echo 'Skip "'.$tld.'" domain page. HTTP server is obsolete...'.\PHP_EOL;
         continue;
     }
 
-    $servers[$tld] = [
-        'server' => $server,
-        'type' => $type,
-    ];
+    $servers[$tld] = $server;
 }
 echo 'End scan domains.'.\PHP_EOL;
 echo 'Disconnect from '.$host.'...'.\PHP_EOL;
