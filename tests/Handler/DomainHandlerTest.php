@@ -277,7 +277,7 @@ final class DomainHandlerTest extends BaseTestCase
     public static function getRdapDomainResponse(): \Generator
     {
         yield ['ru', self::createRdapTldServerList()->serverDefault, '"Coordination Center for TLD RU"', null, null];
-        yield ['google.com', 'https://rdap.verisign.com/com/v1/', '"handle":"2138514_DOMAIN_COM-VRSN","ldhName":"GOOGLE.COM"', 'https://rdap.markmonitor.com/rdap/domain/', null]; // todo
+        yield ['google.com', 'https://rdap.verisign.com/com/v1/', '"handle":"2138514_DOMAIN_COM-VRSN","ldhName":"GOOGLE.COM"', 'https://rdap.markmonitor.com/rdap/domain/', '"handle":"2138514_DOMAIN_COM-VRSN"'];
         yield ['registro.br', 'https://rdap.registro.br/', 'Núcleo de Inf. e Coord. do Ponto BR - NIC.BR', null, null];
         yield ['я.рус', 'https://api.rdap.nic.xn--p1acf/', '"handle":"8144-CoCCA","ldhName":"xn--41a.xn--p1acf"', null, null]; // punycode
     }

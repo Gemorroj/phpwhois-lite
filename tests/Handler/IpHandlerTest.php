@@ -67,7 +67,7 @@ final class IpHandlerTest extends BaseTestCase
         yield ['1.1.1.1', 'inetnum:        1.1.1.0 - 1.1.1.255', 'whois.apnic.net'];
         yield ['2001:4860:4860::8888', 'NetHandle:      NET6-2001-4860-1', 'whois.arin.net'];
         yield ['193.0.11.51', 'inetnum:        193.0.10.0 - 193.0.11.255', 'whois.ripe.net'];
-        yield ['200.3.13.10', '???', 'whois.lacnic.net']; // todo
+        yield ['200.3.13.10', 'inetnum:     200.3.12.0/22', 'whois.lacnic.net'];
         yield ['196.216.2.1', 'inetnum:        196.216.2.0 - 196.216.3.255', 'whois.afrinic.net'];
         yield ['192.72.254.0', 'NetHandle:      NET-192-72-254-0-1', 'whois.arin.net'];
     }
@@ -91,7 +91,7 @@ final class IpHandlerTest extends BaseTestCase
         yield ['1.1.1.1', '"handle":"1.1.1.0 - 1.1.1.255"', 'https://rdap.apnic.net/'];
         yield ['2001:4860:4860::8888', '"handle" : "NET6-2001-4860-1"', 'https://rdap.arin.net/registry/'];
         yield ['193.0.11.51', '"handle" : "193.0.10.0 - 193.0.11.255"', 'https://rdap.db.ripe.net/'];
-        yield ['200.3.13.10', '???', 'https://rdap.lacnic.net/rdap/']; // todo
+        yield ['200.3.13.10', '"handle":"200.3.12.0/22"', 'https://rdap.lacnic.net/rdap/'];
         yield ['196.216.2.1', '"handle":"196.216.2.0 - 196.216.3.255"', 'https://rdap.afrinic.net/rdap/'];
         yield ['192.72.254.0', '"handle" : "NET-192-72-254-0-1"', 'https://rdap.arin.net/registry/'];
     }
