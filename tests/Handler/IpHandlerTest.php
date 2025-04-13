@@ -10,7 +10,7 @@ use WhoRdap\Tests\BaseTestCase;
 
 final class IpHandlerTest extends BaseTestCase
 {
-    #[DataProvider('getRdapIps')]
+    #[DataProvider('provideRdapIps')]
     public function testFindIpServerRdap(string $query, string $server): void
     {
         $handler = new IpHandler($this->createLoggedClient(), self::createRdapIpServerList());
@@ -21,7 +21,7 @@ final class IpHandlerTest extends BaseTestCase
         self::assertEquals($server, $result);
     }
 
-    public static function getRdapIps(): \Generator
+    public static function provideRdapIps(): \Generator
     {
         yield ['1.1.1.1/8', 'https://rdap.apnic.net/'];
         yield ['1.1.1.1', 'https://rdap.apnic.net/'];
@@ -29,7 +29,7 @@ final class IpHandlerTest extends BaseTestCase
         yield ['2.2.2.2', self::createRdapIpServerList()->serverDefault];
     }
 
-    #[DataProvider('getWhoisIps')]
+    #[DataProvider('provideWhoisIps')]
     public function testFindIpServerWhois(string $query, string $server): void
     {
         $handler = new IpHandler($this->createLoggedClient(), self::createWhoisIpServerList());
@@ -40,7 +40,7 @@ final class IpHandlerTest extends BaseTestCase
         self::assertEquals($server, $result);
     }
 
-    public static function getWhoisIps(): \Generator
+    public static function provideWhoisIps(): \Generator
     {
         yield ['1.1.1.1/8', 'whois.apnic.net'];
         yield ['1.1.1.1', 'whois.apnic.net'];
@@ -48,7 +48,7 @@ final class IpHandlerTest extends BaseTestCase
         yield ['2.2.2.2', self::createWhoisIpServerList()->serverDefault];
     }
 
-    #[DataProvider('getWhoisIpResponse')]
+    #[DataProvider('provideWhoisIpResponse')]
     public function testProcessWhois(string $query, string $expectedString, string $expectedServer): void
     {
         $handler = new IpHandler($this->createLoggedClient(), self::createWhoisIpServerList());
@@ -59,7 +59,7 @@ final class IpHandlerTest extends BaseTestCase
         self::assertEquals($expectedServer, $data->server);
     }
 
-    public static function getWhoisIpResponse(): \Generator
+    public static function provideWhoisIpResponse(): \Generator
     {
         yield ['127.0.0.1', 'NetName:        SPECIAL-IPV4-LOOPBACK-IANA-RESERVED', self::createWhoisIpServerList()->serverDefault];
         yield ['192.168.0.1', 'NetName:        PRIVATE-ADDRESS-CBLK-RFC1918-IANA-RESERVED', self::createWhoisIpServerList()->serverDefault];
@@ -72,7 +72,7 @@ final class IpHandlerTest extends BaseTestCase
         yield ['192.72.254.0', 'NetHandle:      NET-192-72-254-0-1', 'whois.arin.net'];
     }
 
-    #[DataProvider('getRdapIpResponse')]
+    #[DataProvider('provideRdapIpResponse')]
     public function testProcessRdap(string $query, string $expectedString, string $expectedServer): void
     {
         $handler = new IpHandler($this->createLoggedClient(), self::createRdapIpServerList());
@@ -83,7 +83,7 @@ final class IpHandlerTest extends BaseTestCase
         self::assertEquals($expectedServer, $data->server);
     }
 
-    public static function getRdapIpResponse(): \Generator
+    public static function provideRdapIpResponse(): \Generator
     {
         yield ['127.0.0.1', '"handle" : "NET-127-0-0-0-1",', self::createRdapIpServerList()->serverDefault];
         yield ['192.168.0.1', '"handle" : "NET-192-168-0-0-1"', self::createRdapIpServerList()->serverDefault];

@@ -13,7 +13,7 @@ use WhoRdap\NetworkClient\NetworkClient;
 
 abstract class BaseTestCase extends TestCase
 {
-    protected function createLoggedClient(?int $cacheTime = null): NetworkClient
+    protected function createLoggedClient(?int $cacheTime = null, ?int $timeout = 5): NetworkClient
     {
         $input = new ArgvInput();
         $output = new ConsoleOutput(OutputInterface::VERBOSITY_DEBUG);
@@ -26,6 +26,6 @@ abstract class BaseTestCase extends TestCase
 
         $cache = new FilesystemAdapter('whordap', $cacheTime);
 
-        return new NetworkClient(cache: $cache, logger: $logger);
+        return new NetworkClient(timeout: $timeout, cache: $cache, logger: $logger);
     }
 }

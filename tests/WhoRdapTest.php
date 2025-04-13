@@ -10,7 +10,7 @@ use WhoRdap\WhoRdap;
 
 final class WhoRdapTest extends BaseTestCase
 {
-    #[DataProvider('getQueries')]
+    #[DataProvider('provideQueries')]
     public function testCreateWhoisQueryHandler(string $query, string $className): void
     {
         $whois = new WhoRdap();
@@ -24,7 +24,7 @@ final class WhoRdapTest extends BaseTestCase
         self::assertStringStartsWith('WhoRdap\\Resource\\Whois', $reflectionProperty->getValue($handler)::class);
     }
 
-    #[DataProvider('getQueries')]
+    #[DataProvider('provideQueries')]
     public function testCreateRdapQueryHandler(string $query, string $className): void
     {
         $whois = new WhoRdap();
@@ -38,7 +38,7 @@ final class WhoRdapTest extends BaseTestCase
         self::assertStringStartsWith('WhoRdap\\Resource\\Rdap', $reflectionProperty->getValue($handler)::class);
     }
 
-    public static function getQueries(): \Generator
+    public static function provideQueries(): \Generator
     {
         yield ['127.0.0.1', IpHandler::class];
         yield ['::/128 ', IpHandler::class];

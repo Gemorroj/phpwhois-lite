@@ -12,7 +12,7 @@ use WhoRdap\Tests\BaseTestCase;
 
 final class DomainHandlerTest extends BaseTestCase
 {
-    #[DataProvider('getDomainsWhois')]
+    #[DataProvider('provideDomainsWhois')]
     public function testWhoisFindTldServer(string $query, ?string $server): void
     {
         $handler = new DomainHandler($this->createLoggedClient(), self::createWhoisTldServerList());
@@ -23,7 +23,7 @@ final class DomainHandlerTest extends BaseTestCase
         self::assertEquals($server, $result);
     }
 
-    public static function getDomainsWhois(): \Generator
+    public static function provideDomainsWhois(): \Generator
     {
         yield ['vk.com', 'whois.verisign-grs.com'];
         yield ['ya.ru', 'whois.tcinet.ru'];
@@ -33,7 +33,7 @@ final class DomainHandlerTest extends BaseTestCase
         yield ['domain.unknowntld', self::createWhoisTldServerList()->serverDefault];
     }
 
-    #[DataProvider('getDomainsRdap')]
+    #[DataProvider('provideDomainsRdap')]
     public function testRdapFindTldServer(string $query, ?string $server): void
     {
         $handler = new DomainHandler($this->createLoggedClient(), self::createRdapTldServerList());
@@ -44,7 +44,7 @@ final class DomainHandlerTest extends BaseTestCase
         self::assertEquals($server, $result);
     }
 
-    public static function getDomainsRdap(): \Generator
+    public static function provideDomainsRdap(): \Generator
     {
         yield ['vk.com', 'https://rdap.verisign.com/com/v1/'];
         yield ['test.org.ru', 'https://www.nic.ru/rdap/'];
@@ -53,7 +53,7 @@ final class DomainHandlerTest extends BaseTestCase
         yield ['domain.unknowntld', self::createRdapTldServerList()->serverDefault];
     }
 
-    #[DataProvider('getRegistrarDataWhois')]
+    #[DataProvider('provideRegistrarDataWhois')]
     public function testFindWhoisRegistrarServer(string $response, ?string $expectedServer): void
     {
         $handler = new DomainHandler($this->createLoggedClient(), self::createWhoisTldServerList());
@@ -64,7 +64,7 @@ final class DomainHandlerTest extends BaseTestCase
         self::assertEquals($expectedServer, $result);
     }
 
-    public static function getRegistrarDataWhois(): \Generator
+    public static function provideRegistrarDataWhois(): \Generator
     {
         yield ['   Registrar WHOIS Server: whois.nic.ru', 'whois.nic.ru'];
         yield ['   Registrar WHOIS Server: rwhois://whois.nic.ru', 'whois.nic.ru'];
@@ -76,7 +76,7 @@ final class DomainHandlerTest extends BaseTestCase
         yield [' whois:', null];
     }
 
-    #[DataProvider('getRegistrarDataRdap')]
+    #[DataProvider('provideRegistrarDataRdap')]
     public function testFindRdapRegistrarServer(string $response, ?string $expectedServer): void
     {
         $handler = new DomainHandler($this->createLoggedClient(), self::createRdapTldServerList());
@@ -87,7 +87,7 @@ final class DomainHandlerTest extends BaseTestCase
         self::assertEquals($expectedServer, $result);
     }
 
-    public static function getRegistrarDataRdap(): \Generator
+    public static function provideRegistrarDataRdap(): \Generator
     {
         yield [\json_encode(['links' => [['href' => 'http://example.com', 'rel' => 'related', 'type' => 'application/rdap+json']]], \JSON_THROW_ON_ERROR), 'http://example.com'];
         yield [\json_encode(['links' => [['href' => 'https://example.com/domain/TEST.RU', 'rel' => 'related', 'type' => 'application/rdap+json']]], \JSON_THROW_ON_ERROR), 'https://example.com/'];
@@ -96,7 +96,7 @@ final class DomainHandlerTest extends BaseTestCase
         yield ['   test: string', null];
     }
 
-    #[DataProvider('getWhoisServers')]
+    #[DataProvider('provideWhoisServers')]
     public function testPrepareWhoisServer(string $server, ?string $preparedServer): void
     {
         try {
@@ -110,7 +110,7 @@ final class DomainHandlerTest extends BaseTestCase
         self::assertEquals($preparedServer, $result);
     }
 
-    public static function getWhoisServers(): \Generator
+    public static function provideWhoisServers(): \Generator
     {
         yield ['localhost', 'localhost'];
         yield ['whois.nic.ru', 'whois.nic.ru'];
@@ -124,7 +124,7 @@ final class DomainHandlerTest extends BaseTestCase
         yield ['\\passwords', null];
     }
 
-    #[DataProvider('getRdapServers')]
+    #[DataProvider('provideRdapServers')]
     public function testPrepareRdapServer(string $server, ?string $preparedServer): void
     {
         try {
@@ -138,7 +138,7 @@ final class DomainHandlerTest extends BaseTestCase
         self::assertEquals($preparedServer, $result);
     }
 
-    public static function getRdapServers(): \Generator
+    public static function provideRdapServers(): \Generator
     {
         yield ['localhost', null];
         yield ['whois.nic.ru', null];
@@ -220,7 +220,7 @@ final class DomainHandlerTest extends BaseTestCase
         self::assertEquals('https://rdap.publicinterestregistry.org/rdap/', $data->server);
     }
 
-    #[DataProvider('getWhoisDomainResponse')]
+    #[DataProvider('provideWhoisDomainResponse')]
     public function testProcessWhois(
         string $query,
         string $expectedServer,
@@ -243,7 +243,7 @@ final class DomainHandlerTest extends BaseTestCase
         }
     }
 
-    public static function getWhoisDomainResponse(): \Generator
+    public static function provideWhoisDomainResponse(): \Generator
     {
         yield ['ru', self::createWhoisTldServerList()->serverDefault, 'organisation: Coordination Center for TLD RU', null, null];
         yield ['vk.com', 'whois.verisign-grs.com', 'Registrar URL: http://nic.ru', 'whois.nic.ru', 'Registrant Country: RU'];
@@ -251,7 +251,7 @@ final class DomainHandlerTest extends BaseTestCase
         yield ['президент.рф', 'whois.tcinet.ru', 'org:           Special Communications and Information Service of the Federal Guard Service of the Russian Federation (Spetssvyaz FSO RF)', null, null]; // punycode
     }
 
-    #[DataProvider('getRdapDomainResponse')]
+    #[DataProvider('provideRdapDomainResponse')]
     public function testProcessRdap(
         string $query,
         string $expectedServer,
@@ -274,7 +274,7 @@ final class DomainHandlerTest extends BaseTestCase
         }
     }
 
-    public static function getRdapDomainResponse(): \Generator
+    public static function provideRdapDomainResponse(): \Generator
     {
         yield ['ru', self::createRdapTldServerList()->serverDefault, '"Coordination Center for TLD RU"', null, null];
         yield ['google.com', 'https://rdap.verisign.com/com/v1/', '"handle":"2138514_DOMAIN_COM-VRSN","ldhName":"GOOGLE.COM"', 'https://rdap.markmonitor.com/rdap/', '"handle":"2138514_DOMAIN_COM-VRSN"'];
@@ -309,5 +309,14 @@ final class DomainHandlerTest extends BaseTestCase
         ];
 
         return $serverList;
+    }
+
+    public function testProcessWhoisTimeout(): void
+    {
+        $handler = new DomainHandler($this->createLoggedClient(), self::createWhoisTldServerList());
+        $this->expectException(NetworkException::class);
+        $data = $handler->processWhois('haiku-inc.org', 'whois.namecheap.com');
+        // \file_put_contents('/test.txt', $data->response);
+        // var_dump($data->response);
     }
 }

@@ -10,7 +10,7 @@ use WhoRdap\Tests\BaseTestCase;
 
 final class AsnHandlerTest extends BaseTestCase
 {
-    #[DataProvider('getRdapAsns')]
+    #[DataProvider('provideRdapAsns')]
     public function testFindAsnServerRdap(string $query, string $server): void
     {
         $handler = new AsnHandler($this->createLoggedClient(), self::createRdapAsnServerList());
@@ -21,7 +21,7 @@ final class AsnHandlerTest extends BaseTestCase
         self::assertEquals($server, $result);
     }
 
-    public static function getRdapAsns(): \Generator
+    public static function provideRdapAsns(): \Generator
     {
         yield ['1', 'https://rdap.arin.net/registry/'];
         yield ['AS1', 'https://rdap.arin.net/registry/'];
@@ -29,7 +29,7 @@ final class AsnHandlerTest extends BaseTestCase
         yield ['123123123123', self::createRdapAsnServerList()->serverDefault];
     }
 
-    #[DataProvider('getWhoisAsns')]
+    #[DataProvider('provideWhoisAsns')]
     public function testFindAsnServerWhois(string $query, string $server): void
     {
         $handler = new AsnHandler($this->createLoggedClient(), self::createWhoisAsnServerList());
@@ -40,7 +40,7 @@ final class AsnHandlerTest extends BaseTestCase
         self::assertEquals($server, $result);
     }
 
-    public static function getWhoisAsns(): \Generator
+    public static function provideWhoisAsns(): \Generator
     {
         yield ['1', 'whois.arin.net'];
         yield ['AS1', 'whois.arin.net'];
@@ -48,7 +48,7 @@ final class AsnHandlerTest extends BaseTestCase
         yield ['123123123123', self::createWhoisAsnServerList()->serverDefault];
     }
 
-    #[DataProvider('getWhoisAsnResponse')]
+    #[DataProvider('provideWhoisAsnResponse')]
     public function testProcessWhois(string $query, string $expectedString, string $expectedServer): void
     {
         $handler = new AsnHandler($this->createLoggedClient(), self::createWhoisAsnServerList());
@@ -59,7 +59,7 @@ final class AsnHandlerTest extends BaseTestCase
         self::assertEquals($expectedServer, $data->server);
     }
 
-    public static function getWhoisAsnResponse(): \Generator
+    public static function provideWhoisAsnResponse(): \Generator
     {
         yield ['AS4837', 'as-block:       AS4608 - AS4865', 'whois.apnic.net'];
         yield ['4837', 'as-block:       AS4608 - AS4865', 'whois.apnic.net'];
@@ -73,7 +73,7 @@ final class AsnHandlerTest extends BaseTestCase
         yield ['36864', 'aut-num:        AS36864', 'whois.afrinic.net'];
     }
 
-    #[DataProvider('getRdapAsnResponse')]
+    #[DataProvider('provideRdapAsnResponse')]
     public function testProcessRdap(string $query, string $expectedString, string $expectedServer): void
     {
         $handler = new AsnHandler($this->createLoggedClient(), self::createRdapAsnServerList());
@@ -84,7 +84,7 @@ final class AsnHandlerTest extends BaseTestCase
         self::assertEquals($expectedServer, $data->server);
     }
 
-    public static function getRdapAsnResponse(): \Generator
+    public static function provideRdapAsnResponse(): \Generator
     {
         yield ['AS4837', '"handle":"AS4837"', 'https://rdap.apnic.net/'];
         yield ['4837', '"handle":"AS4837"', 'https://rdap.apnic.net/'];

@@ -202,11 +202,11 @@ readonly class NetworkClient implements NetworkClientInterface
 
         $raw = '';
         $_ = null;
-        $r = [$ptr];
         $startTime = \time();
 
         $this->logger?->debug('Read data from WHOIS server...');
         while (!\feof($ptr)) {
+            $r = [$ptr];
             if (false !== \stream_select($r, $_, $_, $this->timeout)) {
                 $str = \fgets($ptr, $this->buffer);
                 if (false !== $str) {
